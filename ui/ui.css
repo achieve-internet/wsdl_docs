@@ -1,0 +1,40 @@
+.table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 1rem;
+}
+
+caption {
+    font-size: 110%;
+    font-weight: bold;
+    padding-bottom: 0.5em;
+    text-align: left !important;
+}
+
+html input[disabled] {
+    cursor: default;
+    background-color: #F2F2F2 !important;
+    color: #C6C6C6;
+    border-color: #ddd;
+}
+
+.fieldset-legend {
+    padding-top: 10px;
+}
+
+.legend {
+    margin-bottom: 10px !important;
+}
+
+fieldset.collapsed {
+    height: 3em !important;
+}
+
+.soap_body_textarea{
+    display:none;
+}
+
+.get_reference_number_button{
+    margin-top: 2%;
+    margin-bottom: 2%;
+}

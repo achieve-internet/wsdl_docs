@@ -10,7 +10,7 @@
  * FAPI form used to display the options and the results of calling a web
  * service.
  */
-function soap_client_operation_invoke($form, $form_state, $service, $operation) {
+function smartdocs_wsdl_operation_invoke($form, $form_state, $service, $operation) {
   $strings = array(
     '!service_label' => $service->label,
     '!operation_label' => $operation['label'],
@@ -39,14 +39,14 @@ function soap_client_operation_invoke($form, $form_state, $service, $operation) 
   );
 
   //custom css for form parameters
-  $form['parameters']['#attached']['css'][] = drupal_get_path('module', 'soap_client') . '/ui/ui.css'; 
+  $form['parameters']['#attached']['css'][] = drupal_get_path('module', 'smartdocs_wsdl') . '/ui/ui.css'; 
   
   // Deal with complex types.
   // Each complex type may require its own mini-form for data entry,
   // and these may be nested.
   $datatypes = $service->datatypes;
   foreach ($operation['parameter'] as $param => $info) {
-      $form['parameters'][$param] = soap_client_request_data($param, $info['type'], @$info['description'], @$form_state['values']['parameters'], $datatypes, @$info['required']);
+      $form['parameters'][$param] = smartdocs_wsdl_request_data($param, $info['type'], @$info['description'], @$form_state['values']['parameters'], $datatypes, @$info['required']);
   }
 
   $form['execute'] = array(
@@ -54,7 +54,7 @@ function soap_client_operation_invoke($form, $form_state, $service, $operation) 
     '#value' => 'Execute Request',
     '#ajax' => array(
       'event' => 'click',
-      'callback' => 'wsclient_tester_prepare_request_callback',
+      'callback' => 'smartdocs_wsdl_prepare_request_callback',
       'wrapper' => 'edit-transaction',
       'method' => 'replace',
       'effect' => 'fade',
@@ -128,7 +128,7 @@ function soap_client_operation_invoke($form, $form_state, $service, $operation) 
       '#type' => 'container',
       '#tree' => TRUE,
     );
-    $form['response']['results']['#attached']['css'][] = drupal_get_path('module', 'soap_client') . '/ui/ui.css'; 
+    $form['response']['results']['#attached']['css'][] = drupal_get_path('module', 'smartdocs_wsdl') . '/ui/ui.css'; 
    
 
     // Deal with complex types.
@@ -137,7 +137,7 @@ function soap_client_operation_invoke($form, $form_state, $service, $operation) 
     
 
     $datatypes = $service->datatypes;
-      $form['response']['results']['definition'] = soap_client_response_data($operation['result'], $operation['result']['type'], @$resinfo['description'], @$form_state['values']['parameters'], $datatypes, @$resinfo['required']);
+      $form['response']['results']['definition'] = smartdocs_wsdl_response_data($operation['result'], $operation['result']['type'], @$resinfo['description'], @$form_state['values']['parameters'], $datatypes, @$resinfo['required']);
   */
 
   return $form;
@@ -147,8 +147,8 @@ function soap_client_operation_invoke($form, $form_state, $service, $operation) 
  * FAPI form used to display the options and the results of calling a web
  * service during the certification process.
  */
-function soap_client_certify_operation_invoke($form, &$form_state, $service, $certification, $certification_step) {
-  require_once jsonpath_parser_library_path();
+function smartdocs_wsdl_certify_operation_invoke($form, &$form_state, $service, $certification, $certification_step) {
+  require_once smartdocs_wsdl_jsonpath_parser_library_path();
 
   $certs = array();
   $operations = $service->operations;
@@ -184,7 +184,7 @@ function soap_client_certify_operation_invoke($form, &$form_state, $service, $ce
 
   //$soap_operations_key = arg(3);
   $soap_operations_key = $_SESSION['acoperations']['operations']['key'];  
-  $soap_operations_node =  node_load_by_title($soap_operations_key, 'acoperations');
+  $soap_operations_node =  smartdocs_wsdl_node_load_by_title($soap_operations_key, 'acoperations');
   if ($soap_operations_node) {
     // Load the sample payload
     $soap_operations = $soap_operations_node->body[LANGUAGE_NONE][0]['value'];
@@ -217,7 +217,7 @@ function soap_client_certify_operation_invoke($form, &$form_state, $service, $ce
 
 			//BLOCK2: Retreive include exclude fields for the current operation - Start (Gurpreet)
 			$soap_operations_fields_key = $soap_operations_key . "_" . $soap_operation_name_with_index;
-			$soap_operations_fields_node =  node_load_by_title($soap_operations_fields_key, 'acoperfields');
+			$soap_operations_fields_node =  smartdocs_wsdl_node_load_by_title($soap_operations_fields_key, 'acoperfields');
 	  
 			if ($soap_operations_fields_node)
 			{
@@ -230,7 +230,7 @@ function soap_client_certify_operation_invoke($form, &$form_state, $service, $ce
 				{	
 					//if(!isset($_SESSION['baasresponse']['sender']) || !isset($_SESSION['baasresponse']['receiver'])){
 						$baas_payload_key = "userdetailsbaas";
-						$baas_payload_node =  node_load_by_title($baas_payload_key, 'acconfig');
+						$baas_payload_node =  smartdocs_wsdl_node_load_by_title($baas_payload_key, 'acconfig');
 
 						if ($baas_payload_node) {
 						  // Load the sample payload
@@ -514,7 +514,7 @@ function soap_client_certify_operation_invoke($form, &$form_state, $service, $ce
 //Execute ref no logic only for agentconnect_receive
   if((arg(1) == 'agentconnect_receive' && (int)$certification_step == 0) || !empty($form_state['values']['gen-reference-soap-submit']) || (arg(1) == 'form_free' && arg(3) == 'recusatomexformfreereceive' && (int)$certification_step == 0) || (arg(1) == 'amend' && (int)$certification_step == 0) || (arg(1) == 'send_reversal' && (int)$certification_step == 0)){
     $soap_payload_key = arg(3);
-    $soap_payload_node =  node_load_by_title($soap_payload_key, 'acrspayload');
+    $soap_payload_node =  smartdocs_wsdl_node_load_by_title($soap_payload_key, 'acrspayload');
 	$ref_Num_Request = $soap_operation_name . "Request";
 	$_SESSION['acoperations']['operations']['request'] = $ref_Num_Request;
 	
@@ -603,13 +603,13 @@ function soap_client_certify_operation_invoke($form, &$form_state, $service, $ce
   );
 
   //custom css for form parameters
-  $form['parameters']['#attached']['css'][] = drupal_get_path('module', 'soap_client') . '/ui/ui.css';   
+  $form['parameters']['#attached']['css'][] = drupal_get_path('module', 'smartdocs_wsdl') . '/ui/ui.css';   
   // Deal with complex types.
   // Each complex type may require its own mini-form for data entry,
   // and these may be nested.
   $datatypes = $service->datatypes;
   foreach ($operation['parameter'] as $param => $info) {
-      $form['parameters'][$param] = soap_client_certify_data($param, $info['type'], @$info['description'], @$form_state['values']['parameters'], $datatypes, @$info['required'], $excludeFields, $defaultValues);
+      $form['parameters'][$param] = smartdocs_wsdl_certify_data($param, $info['type'], @$info['description'], @$form_state['values']['parameters'], $datatypes, @$info['required'], $excludeFields, $defaultValues);
   }
   
 /*  replacing 'referenceNumberRequest' with $ref_Num_Request - Gurpreet
@@ -641,7 +641,7 @@ function soap_client_certify_operation_invoke($form, &$form_state, $service, $ce
     
       //call to apigee mashupsendcommit proxy
 		$mashup_payload_key = "mashupproxyurl";
-		$mashup_payload_node =  node_load_by_title($mashup_payload_key, 'acconfig');
+		$mashup_payload_node =  smartdocs_wsdl_node_load_by_title($mashup_payload_key, 'acconfig');
 		if ($mashup_payload_node) {
 			$mashup_payload = $mashup_payload_node->body[LANGUAGE_NONE][0]['value'];
 			$mashup_payload_array = json_decode($mashup_payload,true);
@@ -678,7 +678,7 @@ function soap_client_certify_operation_invoke($form, &$form_state, $service, $ce
     '#value' => 'Execute Request',
     '#ajax' => array(
       'event' => 'click',
-      'callback' => 'wsclient_tester_prepare_request_callback',
+      'callback' => 'smartdocs_wsdl_prepare_request_callback',
       'wrapper' => 'edit-transaction',
       'method' => 'replace',
       'effect' => 'fade',
@@ -775,7 +775,7 @@ function soap_client_certify_operation_invoke($form, &$form_state, $service, $ce
       '#type' => 'container',
       '#tree' => TRUE,
     );
-    $form['response']['results']['#attached']['css'][] = drupal_get_path('module', 'soap_client') . '/ui/ui.css'; 
+    $form['response']['results']['#attached']['css'][] = drupal_get_path('module', 'smartdocs_wsdl') . '/ui/ui.css'; 
 
     // Deal with complex types.
     // Each complex type may require its own mini-form for data entry,
@@ -783,7 +783,7 @@ function soap_client_certify_operation_invoke($form, &$form_state, $service, $ce
     
 
     $datatypes = $service->datatypes;
-      $form['response']['results']['definition'] = soap_client_response_data($operation['result'], $operation['result']['type'], @$resinfo['description'], @$form_state['values']['parameters'], $datatypes, @$resinfo['required']);
+      $form['response']['results']['definition'] = smartdocs_wsdl_response_data($operation['result'], $operation['result']['type'], @$resinfo['description'], @$form_state['values']['parameters'], $datatypes, @$resinfo['required']);
   */
 
   return $form;
@@ -792,7 +792,7 @@ function soap_client_certify_operation_invoke($form, &$form_state, $service, $ce
 /**
  * FAPI form used to display the properties of a datatype
  */
-function soap_client_type_viewer($form, $form_state, $service, $type){
+function smartdocs_wsdl_type_viewer($form, $form_state, $service, $type){
   $strings = array(
   '!service_label' => $service->label,
   '!type_label' => $type['label'],
@@ -832,7 +832,7 @@ function soap_client_type_viewer($form, $form_state, $service, $type){
     );
     // Add some table styling from Rules.
     $form['types']['#attributes']['class'][] = 'table table-striped';
-    $form['types']['#attached']['css'][] = drupal_get_path('module', 'soap_client') . '/ui/ui.css';
+    $form['types']['#attached']['css'][] = drupal_get_path('module', 'smartdocs_wsdl') . '/ui/ui.css';
 
     /* hide this for now
     $form['properties'] = array(
@@ -857,7 +857,7 @@ function soap_client_type_viewer($form, $form_state, $service, $type){
 /**
  * FAPI form used to display all operations and datatypes of a service
  */
-function soap_client_operation_viewer($form, $form_state, $service) {
+function smartdocs_wsdl_operation_viewer($form, $form_state, $service) {
   //debugging ops and service
   $ops = $service->operations;
   firep($ops);
@@ -903,7 +903,7 @@ function soap_client_operation_viewer($form, $form_state, $service) {
     */
 
    $rows = array();
-      $operations = soap_client_label_sort($service->operations);
+      $operations = smartdocs_wsdl_label_sort($service->operations);
       foreach ($operations as $name => $operation) {
         $row = array();
         $row[] = array('data' => array(
@@ -933,13 +933,13 @@ function soap_client_operation_viewer($form, $form_state, $service) {
       );
       // Add some table styling from Rules.
       $form['operations']['#attributes']['class'][] = 'table table-striped';
-      $form['operations']['#attached']['css'][] = drupal_get_path('module', 'soap_client') . '/ui/ui.css';
+      $form['operations']['#attached']['css'][] = drupal_get_path('module', 'smartdocs_wsdl') . '/ui/ui.css';
 
 
 
       // Data types of the web service in a table
       $rows = array();
-      $datatypes = soap_client_label_sort($service->datatypes);
+      $datatypes = smartdocs_wsdl_label_sort($service->datatypes);
       foreach ($datatypes as $name => $datatype) {
         $row = array();
         $row[] = array('data' => array(
@@ -967,7 +967,7 @@ function soap_client_operation_viewer($form, $form_state, $service) {
         '#weight' => 60,
       );
       $form['datatypes']['#attributes']['class'][] = 'table table-striped';
-      $form['datatypes']['#attached']['css'][] = drupal_get_path('module', 'soap_client') . '/ui/ui.css';
+      $form['datatypes']['#attached']['css'][] = drupal_get_path('module', 'smartdocs_wsdl') . '/ui/ui.css';
 
     return $form;
 }
@@ -975,7 +975,7 @@ function soap_client_operation_viewer($form, $form_state, $service) {
 /**
  * FAPI form used to display all services that are managed
  */
-function soap_client_services_viewer($form, $form_state) {
+function smartdocs_wsdl_services_viewer($form, $form_state) {
   drupal_set_title(t("Web Services"));
 
     //to-do: Find and list all published services
@@ -996,11 +996,11 @@ function get_reference_number($form, $form_state){
 /**
  * Callback for the test from 'prepare' button.
  */
-function wsclient_tester_prepare_request_callback($form, $form_state) {
+function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
   firep($form_state);
   $service = $form_state['build_info']['args'][0];
 
-  if ($form_state['build_info']['form_id'] === 'soap_client_certify_operation_invoke'){
+  if ($form_state['build_info']['form_id'] === 'smartdocs_wsdl_certify_operation_invoke'){
       //look up operation
     $operations = $service->operations;
     $certification = $form_state['build_info']['args'][1];
@@ -1014,7 +1014,7 @@ function wsclient_tester_prepare_request_callback($form, $form_state) {
     }     Changed the ForEach condition to use operation name instead of the certification_step counter (Gurpreet) - END */
   
   //BLOCK1: Use the session variable to get the operation name for comparison inside foreach (Gurpreet) - START
-  //session variable set in soap_client_certify_operation_invoke function
+  //session variable set in smartdocs_wsdl_certify_operation_invoke function
   foreach ($operations as $op => $opinfo) {
       if ($opinfo['label'] === $_SESSION['acoperations']['operations']['name']){
         $operation = $operations[$op];
@@ -1082,11 +1082,11 @@ function wsclient_tester_prepare_request_callback($form, $form_state) {
   }
   elseif ($service->type == 'soap') {
     $element['request']['header']['#markup'] = $service->endpoint()->client()->__getLastRequestHeaders();
-    $element['request']['packet']['#markup'] = htmlspecialchars(wsclient_tester_prettify_xml($service->endpoint()->client()->__getLastRequest()));
+    $element['request']['packet']['#markup'] = htmlspecialchars(smartdocs_wsdl_prettify_xml($service->endpoint()->client()->__getLastRequest()));
     $_SESSION['lastRequest'] = $service->endpoint()->client()->__getLastRequest();
 
     $element['response']['header']['#markup'] = $service->endpoint()->client()->__getLastResponseHeaders();
-    $element['response']['packet']['#markup'] = htmlspecialchars(wsclient_tester_prettify_xml($service->endpoint()->client()->__getLastResponse()));
+    $element['response']['packet']['#markup'] = htmlspecialchars(smartdocs_wsdl_prettify_xml($service->endpoint()->client()->__getLastResponse()));
     $_SESSION['lastResponse'] = $service->endpoint()->client()->__getLastResponse();
  }
 
@@ -1108,7 +1108,7 @@ function wsclient_tester_prepare_request_callback($form, $form_state) {
 /**
  * Indent and format XML for display.
  */
-function wsclient_tester_prettify_xml($xml) {
+function smartdocs_wsdl_prettify_xml($xml) {
   $dom = new DOMDocument;
   $dom->preserveWhiteSpace = FALSE;
   $dom->loadXML($xml);
@@ -1120,7 +1120,7 @@ function wsclient_tester_prettify_xml($xml) {
  * Helper function to sort a nested data information array based on the label
  * of the items.
  */
-function soap_client_label_sort($data_info, $label_key = 'label') {
+function smartdocs_wsdl_label_sort($data_info, $label_key = 'label') {
   $sort_info = array();
   foreach ($data_info as $key => $info) {
     $sort_info[$key] = $info[$label_key];
@@ -1198,7 +1198,7 @@ function _soapclient_ui_property_row_new($name) {
  *
  * @return a FAPI form fragment.
  */
-function soap_client_request_data($label, $type, $description, $data, $datatypes, $required) {
+function smartdocs_wsdl_request_data($label, $type, $description, $data, $datatypes, $required) {
   if (isset($datatypes[$type])) {
     // Build a complex type.
     $datatype = $datatypes[$type];
@@ -1221,20 +1221,20 @@ function soap_client_request_data($label, $type, $description, $data, $datatypes
         {
           $one = $attributes[$field_id];
           firep("$field_id - true - $one");
-          $element[$field_id] = soap_client_request_data($field_id, $field_info['type'], @$field_info['description'], $attributes[$field_id], $datatypes, @$field_info['required']);
+          $element[$field_id] = smartdocs_wsdl_request_data($field_id, $field_info['type'], @$field_info['description'], $attributes[$field_id], $datatypes, @$field_info['required']);
         }
       elseif($field_id == "timeStamp")
         {
           $dt = new DateTime();
           $dt->setTimeZone(new DateTimeZone('UTC'));
           $timeStamp = $dt->format('c');
-          $element[$field_id] = soap_client_request_data($field_id, $field_info['type'], @$field_info['description'], $timeStamp, $datatypes, @$field_info['required']);
+          $element[$field_id] = smartdocs_wsdl_request_data($field_id, $field_info['type'], @$field_info['description'], $timeStamp, $datatypes, @$field_info['required']);
         }
       else
         {
           $two = $attributes[$field_id];
           firep("$field_id - false - $two ");
-          $element[$field_id] = soap_client_request_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes, @$field_info['required']);
+          $element[$field_id] = smartdocs_wsdl_request_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes, @$field_info['required']);
         }
     }
     return $element;
@@ -1252,7 +1252,7 @@ function soap_client_request_data($label, $type, $description, $data, $datatypes
     );
     for ($field_id = 0; $field_id < 3; $field_id++) {
       // Recurse and get each bit to render its own input element
-      $element[$field_id] = soap_client_request_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes);
+      $element[$field_id] = smartdocs_wsdl_request_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes);
       $element[$field_id]['#collapsed'] = TRUE;
     }
     return $element;
@@ -1373,7 +1373,7 @@ function soap_client_request_data($label, $type, $description, $data, $datatypes
   }
 }
 
-function soap_client_certify_data($label, $type, $description, $data, $datatypes, $required, $excludeFields, $defaultValues) {
+function smartdocs_wsdl_certify_data($label, $type, $description, $data, $datatypes, $required, $excludeFields, $defaultValues) {
 
   if (isset($datatypes[$type])) {
     // Build a complex type.
@@ -1408,20 +1408,20 @@ function soap_client_certify_data($label, $type, $description, $data, $datatypes
       {
         //$one = $attributes[$field_id];
         //firep("$field_id - true - $one");
-        $element[$field_id] = soap_client_certify_data($field_id, $field_info['type'], @$field_info['description'], $attributes[$field_id], $datatypes, @$field_info['required'], $excludeFields, $defaultValues);
+        $element[$field_id] = smartdocs_wsdl_certify_data($field_id, $field_info['type'], @$field_info['description'], $attributes[$field_id], $datatypes, @$field_info['required'], $excludeFields, $defaultValues);
       }
       elseif($field_id == "timeStamp")
       {
         $dt = new DateTime();
         $dt->setTimeZone(new DateTimeZone('UTC'));
         $timeStamp = $dt->format('c');
-        $element[$field_id] = soap_client_certify_data($field_id, $field_info['type'], @$field_info['description'], $timeStamp, $datatypes, @$field_info['required'], $excludeFields, $defaultValues);
+        $element[$field_id] = smartdocs_wsdl_certify_data($field_id, $field_info['type'], @$field_info['description'], $timeStamp, $datatypes, @$field_info['required'], $excludeFields, $defaultValues);
       }
       else
       {
         //$two = $attributes[$field_id];
         //firep("$field_id - false - $two ");
-       $element[$field_id] = soap_client_certify_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes, @$field_info['required'], $excludeFields, $defaultValues);
+       $element[$field_id] = smartdocs_wsdl_certify_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes, @$field_info['required'], $excludeFields, $defaultValues);
       }
     }
     return $element;
@@ -1439,7 +1439,7 @@ function soap_client_certify_data($label, $type, $description, $data, $datatypes
     );
     for ($field_id = 0; $field_id < 3; $field_id++) {
       // Recurse and get each bit to render its own input element
-      $element[$field_id] = soap_client_certify_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes, @$field_id['required'], $excludeFields, $defaultValues);
+      $element[$field_id] = smartdocs_wsdl_certify_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes, @$field_id['required'], $excludeFields, $defaultValues);
       $element[$field_id]['#collapsed'] = TRUE;
     }
     return $element;
@@ -1568,7 +1568,7 @@ function soap_client_certify_data($label, $type, $description, $data, $datatypes
  *
  * @return a FAPI form fragment.
  */
-function soap_client_response_data($label, $type, $description, $data, $datatypes) {
+function smartdocs_wsdl_response_data($label, $type, $description, $data, $datatypes) {
   if (isset($datatypes[$type])) {
     // Build a complex type.
     $datatype = $datatypes[$type];
@@ -1580,7 +1580,7 @@ function soap_client_response_data($label, $type, $description, $data, $datatype
     );
     foreach ($datatype['property info'] as $field_id => $field_info) {
       // Recurse and get each bit to render its own input element.
-      $element[$field_id] = soap_client_response_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes);
+      $element[$field_id] = smartdocs_wsdl_response_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes);
     }
     return $element;
   }
@@ -1597,7 +1597,7 @@ function soap_client_response_data($label, $type, $description, $data, $datatype
     );
     for ($field_id = 0; $field_id < 3; $field_id++) {
       // Recurse and get each bit to render its own input element
-      $element[$field_id] = soap_client_response_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes);
+      $element[$field_id] = smartdocs_wsdl_response_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes);
       $element[$field_id]['#collapsed'] = TRUE;
     }
     return $element;
@@ -1621,7 +1621,7 @@ function soap_client_response_data($label, $type, $description, $data, $datatype
   }
 }
 
-function node_load_by_title($title, $node_type) {
+function smartdocs_wsdl_node_load_by_title($title, $node_type) {
     $query = new EntityFieldQuery();
     $entities = $query->entityCondition('entity_type', 'node')
         ->propertyCondition('type', $node_type)

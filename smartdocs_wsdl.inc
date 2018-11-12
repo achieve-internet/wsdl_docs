@@ -148,350 +148,10 @@ function smartdocs_wsdl_operation_invoke($form, $form_state, $service, $operatio
  * service during the certification process.
  */
 function smartdocs_wsdl_certify_operation_invoke($form, &$form_state, $service, $certification, $certification_step) {
-  require_once smartdocs_wsdl_jsonpath_parser_library_path();
-
   $certs = array();
   $operations = $service->operations;
   $operation = NULL;
 
-  //Replaced with another foreach loop after the commented code block (Gurpreet) - START
-  /*foreach ($operations as $op=> $opinfo) {
-  
-    if ($opinfo['certification'])
-    {
-      if ($opinfo['certification'][$certification]) {
-        if ($opinfo['certification'][$certification]['index'] === $certification_step){
-          $operation = $operations[$op];
-      $excludeFields = explode(",", $opinfo['certification'][$certification]['excludeFields']);
-          $includeFields = $opinfo['certification'][$certification]['includeFields'];
-      array_push($certs, $opinfo);
-          if($opinfo['certification'][$certification]['sessionID']){
-            //set flag to store session
-            $session_var = $opinfo['certification'][$certification]['sessionID'];
-          }
-        }
-      }
-    }
-  } */
-  //Replaced with another foreach loop after the commented code block (Gurpreet) - END
-  
-  //BLOCK1: Retreive Operations for a API Category (Gurpreet) - START
-  //arg logic fixed for ref number field , Use $_SESSION['acoperations']['operations']['key'] instead of arg(3) (Shruti) - START
-  if(!isset($_SESSION['acoperations']['operations']['key']) || (null !== arg(3))){
-    $_SESSION['acoperations']['operations']['key'] = arg(3);
-  }
-  //arg logic fixed for ref number field , Use $_SESSION['acoperations']['operations']['key'] instead of arg(3) (Shruti) - END
-
-  //$soap_operations_key = arg(3);
-  $soap_operations_key = $_SESSION['acoperations']['operations']['key'];  
-  $soap_operations_node =  smartdocs_wsdl_node_load_by_title($soap_operations_key, 'acoperations');
-  if ($soap_operations_node) {
-    // Load the sample payload
-    $soap_operations = $soap_operations_node->body[LANGUAGE_NONE][0]['value'];
-    if ($soap_operations) {
-      $operationsInc = explode(",", $soap_operations);
-      $operationsCount = count($operationsInc);     //this variable has the number of elements in array. need to use this for loop 
-      if ($operationsInc) {
-		//$soap_operation_name = $operationsInc[$certification_step];		//using "with_index" variable now - Gurpreet
-		$soap_operation_name_with_index = $operationsInc[$certification_step];		//using "with_index" variable to get as-is soap operation name
-		
-		/* Multiple operation calls with same name (Gurpreet) - START
-		added logic to handle multiple operation calls for same API within single sample transaction. 
-		e.g. calling receiveValidation twice within Form Free Receive Sample transaction.
-		To distinguish each of these receiveValidation operations (because data for each is different), '_' is added to the operation name.
-		e.g. "receiveValidation_1" & "receiveValidation_2"
-		below code is to extract the actual operation/API name and drop the '_' and sequence ---  Gurpreet */
-		
-		$soap_operation_name_pos = strpos($soap_operation_name_with_index, "_");
-		if ($soap_operation_name_pos === false) {		// string '_' not found
-			$soap_operation_name = $soap_operation_name_with_index;
-		}
-		else {		//	string '_' found
-			$soap_operation_name = substr($soap_operation_name_with_index, 0, strpos($soap_operation_name_with_index, '_'));
-		}
-		//Multiple operation calls with same name (Gurpreet) - END
-		
-		//if ($soap_operation_name) {		//using "with_index" variable now - Gurpreet
-		if ($soap_operation_name_with_index) {
-			$_SESSION['acoperations']['operations']['name'] = $soap_operation_name;
-
-			//BLOCK2: Retreive include exclude fields for the current operation - Start (Gurpreet)
-			$soap_operations_fields_key = $soap_operations_key . "_" . $soap_operation_name_with_index;
-			$soap_operations_fields_node =  smartdocs_wsdl_node_load_by_title($soap_operations_fields_key, 'acoperfields');
-	  
-			if ($soap_operations_fields_node)
-			{
-				$descriptionField = $soap_operations_fields_node->body[LANGUAGE_NONE][0]['value'];
-				$includeFieldsObject = $soap_operations_fields_node->field_includefields[LANGUAGE_NONE][0]['value'];
-				$includeFields = json_decode($includeFieldsObject,true);
-				
-				// for retrieving customer information from BaaS - START ***********************************
-				if((arg(1) == 'agentconnect_send' && $soap_operation_name == 'sendValidation' && (arg(3) != 'adustomex' && arg(3) != 'hdsuktodom')) || (arg(1) == 'agentconnect_receive' && (int)$certification_step == 0) || (arg(1) == 'form_free' && (arg(3) == 'recusatomexformfreereceive' || arg(3) == 'usatomexformfreesend' ) && (int)$certification_step == 0) || (arg(1) == 'amend' && (int)$certification_step == 0) || (arg(1) == 'send_reversal' && (int)$certification_step == 0))
-				{	
-					//if(!isset($_SESSION['baasresponse']['sender']) || !isset($_SESSION['baasresponse']['receiver'])){
-						$baas_payload_key = "userdetailsbaas";
-						$baas_payload_node =  smartdocs_wsdl_node_load_by_title($baas_payload_key, 'acconfig');
-
-						if ($baas_payload_node) {
-						  // Load the sample payload
-							$baas_payload = $baas_payload_node->body[LANGUAGE_NONE][0]['value'];
-							$baas_payload_array = json_decode($baas_payload,true);
-							$baas_id_string = $baas_payload_array['ID'];
-							$min_baas_index = $baas_payload_array['min_baas_index'];
-							$max_baas_index = $baas_payload_array['max_baas_index'];
-							$baas_url = $baas_payload_array['baas_url'];
-
-							//*********************** Call BaaS proxy for retrieving SENDER data ******************************* START
-							$baas_index_sender = rand($min_baas_index,$max_baas_index);	//generate random number between min_baas_index to min_baas_index
-							$updated_baas_payload_sender = str_replace($baas_id_string, $baas_index_sender, $baas_payload);
-
-							$baas_options_sender = array(
-							  'method' => 'POST',
-							  'data' => $updated_baas_payload_sender,
-							  'headers' => array('Content-Type' => 'application/json'),
-							  'timeout' => 30,
-							);
-							
-							$baas_response_sender = drupal_http_request($baas_url, $baas_options_sender);
-							//$baas_url	= 'https://moneygram-dev.apigee.net/demobaas'
-							
-							$parsed_baas_response_sender = str_replace("tempuser_","sender",$baas_response_sender->data);
-							
-							/* Replace senderphone with senderhomephone. This field is named different for sender and receiver. 
-							Sender field name is senderHomePhone. Receiver field name is receiverPhone. No change required for receiver.
-							Requirement by Paul - START */
-							$parsed_baas_response_sender = str_replace("senderPhone","senderHomePhone",$parsed_baas_response_sender);
-							//Replace senderphone with senderhomephone - END
-							
-							//*********************** Call BaaS proxy for retrieving SENDER data ******************************* END
-							
-							
-							//*********************** Call BaaS proxy for retrieving RECEIVER data ******************************* START
-							
-							$baas_index_receiver = rand($min_baas_index,$max_baas_index);	//generate random number between min_baas_index to min_baas_index
-
-							//below logic avoids sender and receiver to be the same
-							while ($baas_index_receiver == $baas_index_sender) {			//go in loop if sender and receiver random numbers were same
-								$baas_index_receiver = rand($min_baas_index,$max_baas_index);
-								$random_number_sequence += 1;
-								if ($random_number_sequence > 5) {		//break to avoid infinite loop
-									break;
-								}
-							}
-							
-							$updated_baas_payload_receiver = str_replace($baas_id_string, $baas_index_receiver, $baas_payload);
-
-							$baas_options_receiver = array(
-							  'method' => 'POST',
-							  'data' => $updated_baas_payload_receiver,
-							  'headers' => array('Content-Type' => 'application/json'),
-							  'timeout' => 30,
-							);
-														
-							$baas_response_receiver = drupal_http_request($baas_url, $baas_options_receiver);
-							$parsed_baas_response_receiver = str_replace("tempuser_","receiver",$baas_response_receiver->data);	
-							
-							//*********************** Call BaaS proxy for retrieving RECEIVER data ******************************* END
-							
-							//copy the sender and receiver data into session variables
-							$_SESSION['baasresponse']['sender'] = $parsed_baas_response_sender;
-							$_SESSION['baasresponse']['receiver'] = $parsed_baas_response_receiver;
-						}
-						else {
-							//error handling
-							$error = json_decode($baas_payload_node->data,true);
-							drupal_set_message(t($error['Error']), 'error');
-						}
-					//}
-				}
-								
-				//if (arg(1) == 'agentconnect_send' && $soap_operation_name == 'sendValidation') {			//for sendValidation				
-				if ((arg(1) == 'agentconnect_send' || (arg(1) == 'form_free' && arg(3) == 'usatomexformfreesend')) && $soap_operation_name == 'sendValidation' && (arg(3) != 'adustomex' && arg(3) != 'hdsuktodom')) {			//for sendValidation. Added condition for FormFree Send scenario
-					$parsed_baas_response_sender_array = json_decode($_SESSION['baasresponse']['sender'],true);
-					$parsed_baas_response_receiver_array = json_decode($_SESSION['baasresponse']['receiver'],true);
-					$soap_payload_substr = '%getfrombaas%';
-					
-					//Logic to add formFreeStaging, primaryReceiptLanguage, secondaryReceiptLanguage fields to the $parsed_baas_response_sender_array
-					$defaultValuesObject = $soap_operations_fields_node->field_default[LANGUAGE_NONE][0]['value'];
-					$defaultValuesArray = json_decode($defaultValuesObject,true);
-					
-					//using the logic below to plug-in default values from BaaS into defaultValues string
-					foreach ($defaultValuesArray as $key => $value) {
-						if ($defaultValuesArray[$key] == $soap_payload_substr) {
-							if (strpos($key,"sender") !== false ) {
-								$defaultValuesArray[$key] = $parsed_baas_response_sender_array[$key];
-							}
-							elseif (strpos($key,"receiver") !== false) {
-								$defaultValuesArray[$key] = $parsed_baas_response_receiver_array[$key];
-							}
-							else {
-								//invalid scenario
-							}
-						}
-					}					
-					$defaultValues = $defaultValuesArray;
-					// for retrieving customer information from BaaS - END ***********************************
-				}
-				elseif (((arg(1) == 'agentconnect_receive' || (arg(1) == 'form_free' && arg(3) == 'recusatomexformfreereceive')) && $soap_operation_name == 'receiveValidation')) {			//for receiveValidation. Added condition for FormFree Receive scenario
-					//elseif (arg(1) == 'agentconnect_receive' && $soap_operation_name == 'receiveValidation') {			//for receiveValidation
-					
-					$parsed_baas_response_sender_array = json_decode($_SESSION['baasresponse']['sender'],true);
-					$parsed_baas_response_receiver_array = json_decode($_SESSION['baasresponse']['receiver'],true);
-					$soap_payload_substr = '%getfrombaas%';
-					
-					//Logic to add formFreeStaging, primaryReceiptLanguage, secondaryReceiptLanguage fields to the $parsed_baas_response_sender_array
-					$defaultValuesObject = $soap_operations_fields_node->field_default[LANGUAGE_NONE][0]['value'];
-					$defaultValuesArray = json_decode($defaultValuesObject,true);
-					
-					//using the logic below to plug-in default values from BaaS into defaultValues string
-					foreach ($defaultValuesArray as $key => $value) {
-						if ($defaultValuesArray[$key] == $soap_payload_substr) {
-							if (strpos($key,"sender") !== false ) {
-								$defaultValuesArray[$key] = $parsed_baas_response_sender_array[$key];
-							}
-							elseif (strpos($key,"receiver") !== false) {
-								$defaultValuesArray[$key] = $parsed_baas_response_receiver_array[$key];
-							}
-							else {
-								//invalid scenario
-							}
-						}
-					}					
-					$defaultValues = $defaultValuesArray;
-				}
-				else {			//standard logic for pulling data from the content -- Gurpreet
-					$defaultValuesObject = $soap_operations_fields_node->field_default[LANGUAGE_NONE][0]['value'];
-					$defaultValues = json_decode($defaultValuesObject,true);
-				} 				//standard logic for pulling data from the content -- Gurpreet
-				
-				$excludeFields = explode(",", $soap_operations_fields_node->field_excludefields[LANGUAGE_NONE][0]['value']);
-				if($soap_operations_fields_node->field_sessionid[LANGUAGE_NONE][0]['value']){
-					$session_var = $soap_operations_fields_node->field_sessionid['value'];
-				}
-			}
-			//BLOCK2: Retreive include exclude fields for the current operation - End (Gurpreet)
-		}
-      }
-    }
-  } 
-  
-  //BLOCK3: Get the attributes from the web service description - Start (Gurpreet)
-    foreach ($operations as $op=> $opinfo) {
-    if ($opinfo['label'] === $soap_operation_name)
-    {
-      $operation = $operations[$op];
-      //$label = $opinfo['label'];
-      $result = $opinfo['result'];
-      $parameter = $opinfo['parameter'];
-      array_push($certs, $opinfo);
-      }
-    } 
-    //BLOCK3: Get the attributes from the web service description - End (Gurpreet)
-    //BLOCK1: Retreive Operations for a API Category - End (Gurpreet)
- 
-  //get default values from service entity
-  //$defaultValues = $operation['certification'][$certification]['default'];    //commented - Gurpreet
-  //$_SESSION = NULL;
-
-  //parse xml response from session if available
-  if ($_SESSION['lastResponse']) {
-    $xml = simplexml_load_string($_SESSION['lastResponse']);
-    $responseArray = $xml->children('soapenv', TRUE)->Body->children('ac', TRUE);
-    $json = json_encode($responseArray);
-  $responseArray = json_decode($json, TRUE);
-  
-    //grab the last response and cache
-    $responseID = array_shift(array_keys($responseArray));
-  
-    if (isset($_SESSION['cached_responses'])) {
-      if (empty($_SESSION['cached_responses'])) {
-        //cache is empty but set
-        $_SESSION['cached_responses'] = $responseArray;
-      }
-      elseif (isset($_SESSION['cached_responses'][$responseID])) {
-        //response has been cached previously, update cache with new response
-        unset($_SESSION['cached_responses'][$responseID]);
-        $_SESSION['cached_responses'] = array_merge($_SESSION['cached_responses'], $responseArray);
-      }
-      else {
-        //some response has been cached before, add new response type to cache
-        if (isset($responseArray)) {
-          $_SESSION['cached_responses'] = array_merge($_SESSION['cached_responses'], $responseArray);
-        }
-      }
-    }
-    else {
-      //first cached response
-      $_SESSION['cached_responses'] = $responseArray;
-    }
-  }
-  
-    //parse xml request from session if available
-    if ($_SESSION['lastRequest']) {
-      $xml_req = simplexml_load_string($_SESSION['lastRequest']);
-      $requestArray = $xml_req->children('SOAP-ENV', TRUE)->Body->children('ns1', TRUE);
-      $json = json_encode($requestArray);
-      $requestArray = json_decode($json, TRUE);
-
-      //grab the last response and cache
-      $requestID = array_shift(array_keys($$requestArray));
-
-      if (isset($_SESSION['cached_requests'])) {
-        if (empty($_SESSION['cached_requests'])) {
-          //cache is empty but set
-          $_SESSION['cached_requests'] = $requestArray;
-        }
-        elseif (isset($_SESSION['cached_requests'][$requestID])) {
-          //response has been cached previously, update cache with new response
-          unset($_SESSION['cached_requests'][$requestID]);
-          $_SESSION['cached_requests'] = array_merge($_SESSION['cached_requests'], $requestArray);
-        }
-        else {
-          //some response has been cached before, add new response type to cache
-          if (isset($requestArray)) {
-            $_SESSION['cached_requests'] = array_merge($_SESSION['cached_requests'], $requestArray);
-          }
-        }
-      }
-      else {
-        //first cached response
-        $_SESSION['cached_requests'] = $requestArray;
-      }
-  }
-  
-  //kill last response & request
-  //$_SESSION['lastResponse'] = NULL;
-  //$_SESSION['lastRequest'] = NULL;
-
-  //dpm($_SESSION,"SESSION VARIABLES");
-
-  //add values from session to default values to be be loaded on form
-  $cached_responses = array_merge($_SESSION['cached_responses'],$_SESSION['cached_requests']);
-  
-  if($includeFields)
-  {
-    $incReq = array();
-    foreach ($cached_responses as $cache_resp => $cache_info) 
-  {
-      foreach($includeFields as $incField => $incFieldInfos)
-      {
-        foreach($incFieldInfos as $incFieldInfo => $incFieldMappings)
-          {
-            if ($incField === $cache_resp)
-            {
-              //$test = jsonPath($cache_info, "$.feeInfo.deliveryOption")[0];
-              $incReq[$incFieldMappings] = jsonPath($cache_info, "$." . $incFieldInfo)[0];
-            }
-          }
-       }
-    }
-    if (isset($defaultValues)) {
-      $defaultValues = array_merge($defaultValues, $incReq);
-    }
-    else{
-      $defaultValues = $incReq;
-    }
-  }
   $strings = array(
     '!service_label' => $service->label,
     '!operation_label' => $operation['label'],
@@ -511,80 +171,7 @@ function smartdocs_wsdl_certify_operation_invoke($form, &$form_state, $service, 
   '#markup' => $descriptionField,
   );
         
-//Execute ref no logic only for agentconnect_receive
-  if((arg(1) == 'agentconnect_receive' && (int)$certification_step == 0) || !empty($form_state['values']['gen-reference-soap-submit']) || (arg(1) == 'form_free' && arg(3) == 'recusatomexformfreereceive' && (int)$certification_step == 0) || (arg(1) == 'amend' && (int)$certification_step == 0) || (arg(1) == 'send_reversal' && (int)$certification_step == 0)){
-    $soap_payload_key = arg(3);
-    $soap_payload_node =  smartdocs_wsdl_node_load_by_title($soap_payload_key, 'acrspayload');
-	$ref_Num_Request = $soap_operation_name . "Request";
-	$_SESSION['acoperations']['operations']['request'] = $ref_Num_Request;
-	
-    if ($soap_payload_node) {
-      // Load the sample payload
-        $soap_payload_default = $soap_payload_node->body[LANGUAGE_NONE][0]['value'];
-		
-		// **********  add logic to replace the stub string with sender/receiver values ********* START
-		$soap_payload_substr = '%getfrombaas%';				//defined above
-		$soap_payload_len = strlen($soap_payload_substr);		//defined above					
-		$soap_payload_substr_pos = strpos($soap_payload_default, $soap_payload_substr);		//first occurance of substring
-		
-		//get the sender/receiver BaaS data from session variable
-		$parsed_baas_response_sender_array = json_decode($_SESSION['baasresponse']['sender'],true);
-		$parsed_baas_response_receiver_array = json_decode($_SESSION['baasresponse']['receiver'],true);
-		
-		while ($soap_payload_substr_pos !== false) {
-			$temp_str_left = substr($soap_payload_default,0,$soap_payload_substr_pos);		//find string left of the soap_payload_substr
-			$temp_str_right = substr($soap_payload_default,$soap_payload_substr_pos + $soap_payload_len);	//find string right of the soap_payload_substr
-			
-			//xml tag start/end characters
-			$from = "<";	
-			$to = ">";
-			
-			//search from last (using strrpos) to find the last xml tag in the left string
-			$tmp_str_tag = substr($temp_str_left,strrpos($temp_str_left,$from)+strlen($from),-1);
-			$tmp_str_tag_array = explode(":",$tmp_str_tag);		//find the xml tag name
-			$key = $tmp_str_tag_array[1];
-			
-			//get value for the tag from BaaS content
-			if (strpos($key,"sender") !== false ) {
-				$value = $parsed_baas_response_sender_array[$key];
-			}
-			elseif (strpos($key,"receiver") !== false) {
-				$value = $parsed_baas_response_receiver_array[$key];
-			}
-			else {
-				//invalid scenario
-			}
-			
-			$soap_payload_default =  $temp_str_left . $value . $temp_str_right;
-			$soap_payload_substr_pos = strpos($soap_payload_default, $soap_payload_substr);		//find next occurance of substring
-		}			
-		
-		$soap_payload = $soap_payload_default;		// assigned the final value to soap_payload
-    }
 
-    $form['gen-reference-soap-payload'] = array(
-          '#title' => 'Sample Payload',
-          '#type' => 'textarea',
-          '#default_value' => $soap_payload,
-          '#prefix' => '<div class="soap_body_textarea">',
-          '#suffix' => '</div>', 
-          '#attributes' => array('id' => 'edit-ref'),
-    );
-  
-    $form['gen-reference-soap-submit'] = array(
-      '#type' => 'button',
-      '#value' => 'Generate Reference Number',
-      '#name'  => 'gen-reference-soap-sub',
-      '#prefix' => '<div class="get_reference_number_button">',
-      '#suffix' => '</div>', 
-      '#ajax' => array(
-        'callback' => 'get_reference_number',
-        'wrapper' => 'replace_reference_number_value',
-        'method' => 'replace',
-        'effect' => 'fade',
-      ),
-    );
-  }
 
   /* hide this for now
     $form['uri'] = array(
@@ -619,59 +206,7 @@ function smartdocs_wsdl_certify_operation_invoke($form, &$form_state, $service, 
   $form['parameters'][$ref_Num_Request]['referenceNumber']['#prefix'] = '<div id="replace_reference_number_value">';
   $form['parameters'][$ref_Num_Request]['referenceNumber']['#suffix'] =  '</div>';
   
-    // An AJAX request calls the form builder function for every change.
-    // We can change how we build the form based on $form_state.
-    if (!empty($form_state['values']['gen-reference-soap-submit'])) {
-    /*  replacing 'referenceNumberRequest' with $ref_Num_Request - Gurpreet
-      unset($form_state['input']['parameters']['referenceNumberRequest']['referenceNumber']);
-    */
-    unset($form_state['input']['parameters'][$ref_Num_Request]['referenceNumber']);
-     
-    // Make a call to API Proxy to generate reference number
-      // Make the call to ping..
 
-      $payload = $form_state['values']['gen-reference-soap-payload'];
-
-      $options = array(
-          'method' => 'POST',
-          'data' => $payload,
-          'timeout' => 30,
-          'headers' => array('Content-Type' => 'application/xml', 'SOAPAction' => 'urn:AgentConnect1305#commitTransaction'),
-      );
-    
-      //call to apigee mashupsendcommit proxy
-		$mashup_payload_key = "mashupproxyurl";
-		$mashup_payload_node =  smartdocs_wsdl_node_load_by_title($mashup_payload_key, 'acconfig');
-		if ($mashup_payload_node) {
-			$mashup_payload = $mashup_payload_node->body[LANGUAGE_NONE][0]['value'];
-			$mashup_payload_array = json_decode($mashup_payload,true);
-			$mashup_url_string = $mashup_payload_array['mashup_proxy_url'];	
-		}
-		else {
-			//error handling
-			$error = json_decode($mashup_payload_node->data,true);
-			drupal_set_message(t($error['Error']), 'error');
-		}
-		
-		$result = drupal_http_request($mashup_url_string, $options);		//getting the proxy URL from the Content			
-		//mashup_url_string = 'https://moneygram-ext.apigee.net/v1/mashupsendcommit/commitTrans'
-
-      // Extract ref number from above result using json parse      
-      $ref_result = json_decode($result->data,true);
-  
-      //Error handling
-      $error = json_decode($result->data,true);
-      drupal_set_message(t($error['Error']), 'error');
-    
-    /*  replacing 'referenceNumberRequest' with $ref_Num_Request - Gurpreet
-      $form['parameters']['referenceNumberRequest']['referenceNumber']['#default_value'] =$ref_result['ReferenceNumber'];
-    */
-    $form['parameters'][$ref_Num_Request]['referenceNumber']['#default_value'] = $ref_result['ReferenceNumber'];
-
-      //this is used for debugging
-    /* $form['parameters']['referenceNumberRequest']['referenceNumber']['#description'] = "<pre>" . print_r($result, 1) . "</pre>";
-     */
-    }
   
   $form['execute'] = array(
     '#type' => 'submit',
@@ -740,28 +275,7 @@ function smartdocs_wsdl_certify_operation_invoke($form, &$form_state, $service, 
   '#markup' => '<br/><br/>',
   );
   
-  //todo: check if this is last element in certs array
-  //if(arg(1) == 'agentconnect_receive' && (int)$certification_step < ($operationsCount-1)){  --  had issues, was only showing up for agentconnect_receive
-  if((int)$certification_step < ($operationsCount-1)){
-    $intstep = (int)$certification_step;
-    $nextstep = $intstep + 1;
-    //$nextstep = 1;
-    $proceedUrl = "/soap/" . $service->name . "/certify/" . $certification . "/" . $nextstep;
 
-    //add some markup here
-    $form['resp_spacer'] = array(
-    '#markup' =>   '<br><a role="button" class="btn btn-primary" border="square" href="' . $proceedUrl . '" style="padding:15px 10px !important;"><i class="fa fa-files-o"></i>Proceed to Next API</button></a><br/><br/>',
-    );
-  }
-  elseif ((int)$certification_step = ($operationsCount-1)) {
-  $form['resp_spacer'] = array(
-    '#markup' =>   '<br><h4>This is the end of this Sample Transaction</h4><br/><br/>',
-    );
-    
-    unset($_SESSION['acoperations']['operations']['key']);  //added this to unset the key on the load of last Sample Transaction API page
-	unset($_SESSION['baasresponse']['sender']);	//added this to unset the sender data from BaaS
-	unset($_SESSION['baasresponse']['receiver']);	//added this to unset the receiver data from BaaS
-  }
 
   /* hide this for now
     $form['response'] = array(
@@ -858,10 +372,6 @@ function smartdocs_wsdl_type_viewer($form, $form_state, $service, $type){
  * FAPI form used to display all operations and datatypes of a service
  */
 function smartdocs_wsdl_operation_viewer($form, $form_state, $service) {
-  //debugging ops and service
-  $ops = $service->operations;
-  firep($ops);
-  firep($service);
 
   $strings = array(
     '!service_label' => $service->label,
@@ -902,7 +412,7 @@ function smartdocs_wsdl_operation_viewer($form, $form_state, $service) {
     );
     */
 
-   $rows = array();
+      $rows = array();
       $operations = smartdocs_wsdl_label_sort($service->operations);
       foreach ($operations as $name => $operation) {
         $row = array();
@@ -997,7 +507,7 @@ function get_reference_number($form, $form_state){
  * Callback for the test from 'prepare' button.
  */
 function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
-  firep($form_state);
+ // firep($form_state);
   $service = $form_state['build_info']['args'][0];
 
   if ($form_state['build_info']['form_id'] === 'smartdocs_wsdl_certify_operation_invoke'){
@@ -1024,6 +534,7 @@ function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
   }
   else {
     $operation = $form_state['build_info']['args'][1];
+ //   watchdog('smartdocs_wsdl', print_r($operation, 1));
   }
 
   //firep($operation);
@@ -1220,7 +731,7 @@ function smartdocs_wsdl_request_data($label, $type, $description, $data, $dataty
       if (array_key_exists($field_id, $attributes))
         {
           $one = $attributes[$field_id];
-          firep("$field_id - true - $one");
+     //     firep("$field_id - true - $one");
           $element[$field_id] = smartdocs_wsdl_request_data($field_id, $field_info['type'], @$field_info['description'], $attributes[$field_id], $datatypes, @$field_info['required']);
         }
       elseif($field_id == "timeStamp")
@@ -1233,7 +744,7 @@ function smartdocs_wsdl_request_data($label, $type, $description, $data, $dataty
       else
         {
           $two = $attributes[$field_id];
-          firep("$field_id - false - $two ");
+        //  firep("$field_id - false - $two ");
           $element[$field_id] = smartdocs_wsdl_request_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes, @$field_info['required']);
         }
     }

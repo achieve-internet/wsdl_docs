@@ -9,7 +9,7 @@
  *
  * hook_menu()
  */
-function soap_client_menu() {
+function smartdocs_wsdl_menu() {
   $id_count = 1;
   $op_count = $id_count + 2;
   $dt_count = $op_count;
@@ -19,41 +19,41 @@ function soap_client_menu() {
   $items['soap/%wsclient_service/certify/%/%'] = array(
   'title' => 'certify service',
   'page callback' => 'drupal_get_form',
-  'page arguments' => array('soap_client_certify_operation_invoke', 1, 3, 4),
+  'page arguments' => array('smartdocs_wsdl_certify_operation_invoke', 1, 3, 4),
   'load arguments' => array($id_count),
   'access arguments' => array('access content'),
-  'file' => 'soap_client.inc',
-  'file path' => drupal_get_path('module', 'soap_client'),
+  'file' => 'smartdocs_wsdl.inc',
+  'file path' => drupal_get_path('module', 'smartdocs_wsdl'),
   ); 
 
   $items['soap/%wsclient_service/operation/%wsclient_ui_operation/invoke'] = array(
     'title' => 'invoke operation',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('soap_client_operation_invoke', $id_count, $op_count),
+    'page arguments' => array('smartdocs_wsdl_operation_invoke', $id_count, $op_count),
     'load arguments' => array($id_count),
     'access arguments' => array('access content'),
-    'file' => 'soap_client.inc',
-    'file path' => drupal_get_path('module', 'soap_client'),
+    'file' => 'smartdocs_wsdl.inc',
+    'file path' => drupal_get_path('module', 'smartdocs_wsdl'),
   );
 
   $items['soap/%wsclient_service/type/%wsclient_ui_type'] = array(
     'title' => 'view datatypes',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('soap_client_type_viewer', $id_count, $dt_count),
+    'page arguments' => array('smartdocs_wsdl_type_viewer', $id_count, $dt_count),
     'load arguments' => array($id_count),
     'access arguments' => array('access content'),
-    'file' => 'soap_client.inc',
-    'file path' => drupal_get_path('module', 'soap_client'),
+    'file' => 'smartdocs_wsdl.inc',
+    'file path' => drupal_get_path('module', 'smartdocs_wsdl'),
   ); 
 
   $items['soap/%wsclient_service'] = array(
     'title' => 'view operations',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('soap_client_operation_viewer', $id_count),
+    'page arguments' => array('smartdocs_wsdl_operation_viewer', $id_count),
     'load arguments' => array($id_count),
     'access arguments' => array('access content'),
-    'file' => 'soap_client.inc',
-    'file path' => drupal_get_path('module', 'soap_client'),
+    'file' => 'smartdocs_wsdl.inc',
+    'file path' => drupal_get_path('module', 'smartdocs_wsdl'),
   ); 
   return $items;
 }
@@ -61,19 +61,19 @@ function soap_client_menu() {
 /**
  * Maps the type name from the name used by the remote info to the rules name.
  */
-function soap_client_map_type($service_name, $service_types, $type) {
+function smartdocs_wsdl_map_type($service_name, $service_types, $type) {
   if (is_array($type)) {
     foreach ($type as $key => $entry) {
-      $type[$key] = soap_client_map_type($service_name, $service_types, $entry);
+      $type[$key] = smartdocs_wsdl_map_type($service_name, $service_types, $entry);
     }
     return $type;
   }
   if (isset($service_types[$type])) {
-    //return 'soap_client_' . $service_name . '_' . $type;
+    //return 'smartdocs_wsdl_' . $service_name . '_' . $type;
     return $type;
   }
   if (strpos($type, 'list<') === 0 && isset($service_types[substr($type, 5, -1)])) {
-    return 'list<soap_client_' . $service_name . '_' . substr($type, 5, -1) . '>';
+    return 'list<smartdocs_wsdl_' . $service_name . '_' . substr($type, 5, -1) . '>';
   }
   return $type;
 }
@@ -84,7 +84,7 @@ function soap_client_map_type($service_name, $service_types, $type) {
  * @return string|bool
  *   The relative path of the JSONPath directory, or false if not found.
  */
-function jsonpath_parser_library_path() {
+function smartdocs_wsdl_jsonpath_parser_library_path() {
   $libraries_path = module_exists('libraries') ? libraries_get_path('jsonpath') : FALSE;
   if ($libraries_path && is_dir($libraries_path)) {
     $path = $libraries_path;

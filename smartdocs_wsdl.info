@@ -1,0 +1,6 @@
+name = "SmartDocs WSDL"
+description = "SmartDocs functionality for WSDL files."
+core = "7.x"
+package = Services
+dependencies[] = "wsclient_ui"
+version = "7.x-1.x-dev"

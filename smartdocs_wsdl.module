@@ -77,38 +77,3 @@ function smartdocs_wsdl_map_type($service_name, $service_types, $type) {
   }
   return $type;
 }
-
-/**
- * Returns the path of the JSONPath library.
- *
- * @return string|bool
- *   The relative path of the JSONPath directory, or false if not found.
- */
-function smartdocs_wsdl_jsonpath_parser_library_path() {
-  $libraries_path = module_exists('libraries') ? libraries_get_path('jsonpath') : FALSE;
-  if ($libraries_path && is_dir($libraries_path)) {
-    $path = $libraries_path;
-  }
-  elseif (is_dir(DRUPAL_ROOT . '/sites/all/libraries/jsonpath')) {
-    $path = DRUPAL_ROOT . '/sites/all/libraries/jsonpath';
-  }
-  else {
-    $search = glob(dirname(__FILE__) . '/jsonpath*.php');
-    return is_array($search) ? reset($search) : FALSE;
-  }
-
-  if (!isset($path)) {
-    return FALSE;
-  }
-
-  // Newer forks of JSONPath are all modern and fancy with their autoloaders.
-  if (is_file($path . '/vendor/autoload.php')) {
-    return $path . '/vendor/autoload.php';
-  }
-  // Old school. Look for multiple versions.
-  foreach (glob($path . '/jsonpath*.php') as $file) {
-    return $file;
-  }
-
-  return FALSE;
-}

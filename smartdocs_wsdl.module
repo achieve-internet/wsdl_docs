@@ -4,6 +4,49 @@
  * Provides a UI client for SOAP services
  */
 
+
+/**
+ * hook_form_alter()
+ */
+function smartdocs_wsdl_form_alter(&$form, &$form_state, $form_id) {
+  if($form_id == 'wsclient_service_form' && $form_state['op'] == 'edit') {
+	$form['refresh_service'] = array (
+	  '#type' => 'submit',
+	  '#value' => 'Refresh service',
+	  '#submit' => array ('smartdocs_wsdl_update_service')
+	);
+  }
+}
+
+/**
+ * Update service/operations   if  they changed  in wsdl
+ */
+function smartdocs_wsdl_update_service($form, &$form_state) {
+  $service = wsclient_service_load($form_state['wsclient_service']->name);
+  $service->endpointUpdated = TRUE;
+  $endpoint = $service->endpoint();
+  $endpoint->initializeMetadata();
+  $service->save();
+  rules_clear_cache();
+  $service->clearCache();
+}
+
+/**
+ * hook_entity_presave()
+ */
+function smartdocs_wsdl_entity_presave($entity, $type) {
+   /* create nodes for methods */
+  if ($type == 'wsclient_service' && $entity->op == 'Save') {
+	foreach ($entity->operations as $name => $operation) {
+
+
+	  
+	  drupal_set_message('<pre' . print_r($operation, 1) . '</pre>');
+
+	}
+  }
+}
+
 /**
  * Publish our testing UI and ajax callbacks.
  *

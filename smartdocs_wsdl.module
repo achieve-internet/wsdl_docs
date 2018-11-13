@@ -45,7 +45,7 @@ function smartdocs_wsdl_entity_presave($entity, $type) {
       node_object_prepare($node); 
       $node->uid = $user->uid; 
       $node->status = 1;
-      $node->service_ref['und'][0]['value'] = $entity->id;
+      $node->field_service_ref['und'][0]['target_id'] = $entity->id;
 
       $i = 0;
       foreach ($operation['parameter'] as $param_name => $parameter) {

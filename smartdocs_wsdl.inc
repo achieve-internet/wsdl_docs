@@ -49,6 +49,7 @@ function smartdocs_wsdl_operation_invoke($form, $form_state, $service, $operatio
       $form['parameters'][$param] = smartdocs_wsdl_request_data($param, $info['type'], @$info['description'], @$form_state['values']['parameters'], $datatypes, @$info['required']);
   }
 
+
   $form['execute'] = array(
     '#type' => 'submit',
     '#value' => 'Execute Request',
@@ -509,7 +510,6 @@ function get_reference_number($form, $form_state){
 function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
  // firep($form_state);
   $service = $form_state['build_info']['args'][0];
-
   if ($form_state['build_info']['form_id'] === 'smartdocs_wsdl_certify_operation_invoke'){
       //look up operation
     $operations = $service->operations;
@@ -534,7 +534,8 @@ function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
   }
   else {
     $operation = $form_state['build_info']['args'][1];
- //   watchdog('smartdocs_wsdl', print_r($operation, 1));
+
+	//   watchdog('smartdocs_wsdl', print_r($operation, 1));
   }
 
   //firep($operation);
@@ -592,7 +593,8 @@ function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
     $element['response']['packet']['#markup'] = $service->endpoint()->client()->lastResponse->body;
   }
   elseif ($service->type == 'soap') {
-    $element['request']['header']['#markup'] = $service->endpoint()->client()->__getLastRequestHeaders();
+
+	$element['request']['header']['#markup'] = $service->endpoint()->client()->__getLastRequestHeaders();
     $element['request']['packet']['#markup'] = htmlspecialchars(smartdocs_wsdl_prettify_xml($service->endpoint()->client()->__getLastRequest()));
     $_SESSION['lastRequest'] = $service->endpoint()->client()->__getLastRequest();
 

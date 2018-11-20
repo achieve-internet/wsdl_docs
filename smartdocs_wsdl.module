@@ -98,7 +98,6 @@ function smartdocs_wsdl_update_service_operations($entity) {
   foreach ($array['portType']['operation'] as $operation) {
     $documentations[$operation['@attributes']['name']] = $operation['documentation'];
   }
-  // drupal_set_message('<pre>' . print_r($documentations, 1) . '</pre>');
 
   // List of new operations
   $operations = $entity->operations;

@@ -22,15 +22,6 @@ function smartdocs_wsdl_operation_invoke($form, $form_state, $service, $operatio
   '#markup' => '<h2>Operation: ' . $operation['label'] . '</h2><br>',
   );
 
-  /* hide this for now
-    $form['uri'] = array(
-      '#title' => 'Service URI',
-      '#type' => 'textfield',
-      '#disabled' => TRUE,
-      '#value' => $service->url,
-    );
-  */
-
   $form['parameters'] = array(
     '#title' => 'Parameters',
     '#type' => 'container',
@@ -117,30 +108,6 @@ function smartdocs_wsdl_operation_invoke($form, $form_state, $service, $operatio
   '#markup' => '<br/><br/>',
   );
 
-  /* hide this for now
-    $form['response'] = array(
-      '#type' => 'fieldset',
-      '#title' => 'Response Definition',
-    );
-
-    //display the result parameters
-    $form['response']['results'] = array(
-      '#title' => 'result',
-      '#type' => 'container',
-      '#tree' => TRUE,
-    );
-    $form['response']['results']['#attached']['css'][] = drupal_get_path('module', 'smartdocs_wsdl') . '/ui/ui.css'; 
-   
-
-    // Deal with complex types.
-    // Each complex type may require its own mini-form for data entry,
-    // and these may be nested.
-    
-
-    $datatypes = $service->datatypes;
-      $form['response']['results']['definition'] = smartdocs_wsdl_response_data($operation['result'], $operation['result']['type'], @$resinfo['description'], @$form_state['values']['parameters'], $datatypes, @$resinfo['required']);
-  */
-
   return $form;
 }
 
@@ -171,17 +138,6 @@ function smartdocs_wsdl_certify_operation_invoke($form, &$form_state, $service, 
   $form['header-description'] = array(
   '#markup' => $descriptionField,
   );
-        
-
-
-  /* hide this for now
-    $form['uri'] = array(
-      '#title' => 'Service URI',
-      '#type' => 'textfield',
-      '#disabled' => TRUE,
-      '#value' => $service->url,
-    );
-  */
   
   $form['parameters'] = array(
     '#title' => 'Parameters',
@@ -275,31 +231,6 @@ function smartdocs_wsdl_certify_operation_invoke($form, &$form_state, $service, 
   $form['resp_spacer'] = array(
   '#markup' => '<br/><br/>',
   );
-  
-
-
-  /* hide this for now
-    $form['response'] = array(
-      '#type' => 'fieldset',
-      '#title' => 'Response Definition',
-    );
-
-    //display the result parameters
-    $form['response']['results'] = array(
-      '#title' => 'result',
-      '#type' => 'container',
-      '#tree' => TRUE,
-    );
-    $form['response']['results']['#attached']['css'][] = drupal_get_path('module', 'smartdocs_wsdl') . '/ui/ui.css'; 
-
-    // Deal with complex types.
-    // Each complex type may require its own mini-form for data entry,
-    // and these may be nested.
-    
-
-    $datatypes = $service->datatypes;
-      $form['response']['results']['definition'] = smartdocs_wsdl_response_data($operation['result'], $operation['result']['type'], @$resinfo['description'], @$form_state['values']['parameters'], $datatypes, @$resinfo['required']);
-  */
 
   return $form;
 }
@@ -349,23 +280,6 @@ function smartdocs_wsdl_type_viewer($form, $form_state, $service, $type){
     $form['types']['#attributes']['class'][] = 'table table-striped';
     $form['types']['#attached']['css'][] = drupal_get_path('module', 'smartdocs_wsdl') . '/ui/ui.css';
 
-    /* hide this for now
-    $form['properties'] = array(
-      '#tree' => TRUE,
-      '#element_validate' => array('wsclient_ui_validate_parameters'),
-      //'#theme' => 'wsclient_ui_property_form',
-      '#title' => t('Properties'),
-      '#description' => t('Each property will be shown for the data type below.'),
-    );
-    $types = soapclient_ui_types();
-    if (isset($type['property info'])) {
-      foreach ($type['property info'] as $name => $info) {
-        //$form['properties']['items'][$name] = _soapclient_ui_property_row($service, $types, $name, $info);
-        $form['properties']['items'][$name] = _soapclient_ui_property_row_new($name);
-      }
-    }
-    */
-
   return $form;
 }
 
@@ -388,30 +302,9 @@ function smartdocs_wsdl_operation_viewer($form, $form_state, $service) {
       $types[$type] = $info['label'];
     }
 
-    /* hide this for now
-    $form['label'] = array(
-      '#type' => 'textfield',
-      '#title' => 'Service Name:',
-      '#default_value' => $service->label,
-      '#disabled' => TRUE,
-      '#weight' => 10,
-    );
-    */
-
       $form['header-title'] = array(
         '#markup' => '<h2>' . $service->label . '</h2><br>',
         );
-
-    /* hide this for now
-    $form['url'] = array(
-      '#type' => 'textfield',
-      '#title' => 'URL',
-      '#default_value' => $service->url,
-      '#disabled' => TRUE,
-      '#element_validate' => array('wsclient_ui_element_url_validate'),
-      '#weight' => 30,
-    );
-    */
 
       $rows = array();
       $operations = smartdocs_wsdl_label_sort($service->operations);
@@ -534,8 +427,6 @@ function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
   }
   else {
     $operation = $form_state['build_info']['args'][1];
-
-	//   watchdog('smartdocs_wsdl', print_r($operation, 1));
   }
 
   //firep($operation);
@@ -602,13 +493,6 @@ function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
     $element['response']['packet']['#markup'] = htmlspecialchars(smartdocs_wsdl_prettify_xml($service->endpoint()->client()->__getLastResponse()));
     $_SESSION['lastResponse'] = $service->endpoint()->client()->__getLastResponse();
  }
-
-  /* hide this for now
-  if (module_exists('devel')) {
-    $element['request']['data']['#markup'] = kpr($args, 1);
-    $element['response']['data']['#markup'] = kpr($response, 1);
-   }
-   */
 
   $element['#value'] = t("Ran at %time, took %duration to execute", array(
     '%time' => time(),

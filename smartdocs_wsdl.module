@@ -7,16 +7,7 @@
 include_once 'smartdocs_wsdl.inc';
 
 /**
- * Implements hook_form_FORM_ID_alter().
- */
-function smartdocs_wsdl_form_wsclient_service_overview_form_alter(&$form, &$form_state) {
-  foreach ($form['table']['#rows'] as &$row) {
-    $row[0]['data']['#label'] = $row[0]['data']['#url']['options']['entity']->url;
-  }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter().
+ * Implements hook_form_alter().
  */
 function smartdocs_wsdl_form_wsclient_service_form_alter(&$form, &$form_state) {
   // Add the description field after the machine name field

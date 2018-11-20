@@ -7,69 +7,163 @@
 include_once 'smartdocs_wsdl.inc';
 
 /**
- * hook_entity_presave()
+ * Implements hook_form_FORM_ID_alter().
  */
-function smartdocs_wsdl_entity_presave($entity, $type) {
-   /* Create nodes for methods */
-  if ($type == 'wsclient_service' && $entity->op == 'Save' && is_numeric($entity->id)) {
-	  global $user;
-    // List of new operations
-    $operations = $entity->operations;
-    // Get old operations for this service
-    $query = db_select('node', 'n');
-    $query->innerjoin('field_data_field_service_ref', 'sr', 'sr.entity_id = n.nid');
-    $query->fields('n', array('nid', 'title'));
-    $query->condition('sr.field_service_ref_target_id', $entity->id, '=');
-    $result = $query->execute();
-    while ($node = $result->fetchAssoc()) {
-      // If old operation exists in new operations list
-      if (isset($operations[$node['title']])) {
-        // Get new operation data
-        $operation = $operations[$node['title']];
-        // Load old operation node
-        $old_node = node_load($node['nid']);
-        // Clear old parameters data
-        $old_node->field_parameters['und'] = array();
-        // Set new parameters data
-        $i = 0;
-        foreach ($operation['parameter'] as $param_name => $parameter) {
-          $old_node->field_parameters['und'][$i]['value'] = $param_name . ': ' . $parameter['type'];
-          $i++;
-        }
-        // Update old operation node
-        node_save($old_node);
-        // Unset old operation from new operations list
-        unset($operations[$node['title']]);
-      }
-      // Else if old operation does not exist in new operations list
-      else {
-        // Delete old operation node
-        node_delete($node['nid']);
+function smartdocs_wsdl_form_wsclient_service_overview_form_alter(&$form, &$form_state) {
+  foreach ($form['table']['#rows'] as &$row) {
+    $row[0]['data']['#label'] = $row[0]['data']['#url']['options']['entity']->url;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function smartdocs_wsdl_form_wsclient_service_form_alter(&$form, &$form_state) {
+  // Add the description field after the machine name field
+  $new_form = array();
+  foreach ($form as $key => $data) {
+    $new_form[$key] = $data;
+    if ($key == 'name') {
+      $new_form['description'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Description'),
+        '#maxlength' => 255,
+      );
+      if (is_numeric($form_state['wsclient_service']->id)) {
+        $new_form['description']['#default_value'] = smartdocs_wsdl_load_description($form_state['wsclient_service']->id);
       }
     }
-    // New operations left
-    foreach ($operations as $name => $operation) {
-      // Create operation node
-      $node = new stdClass();
-      // Set operation label as node title
-      $node->title = $operation['label'];
-      $node->type = "operations";
-      node_object_prepare($node);
-      // Set global user as node user
-      $node->uid = $user->uid;
-      $node->status = 1;
-      // Set service id as reference on the service
-      $node->field_service_ref['und'][0]['target_id'] = $entity->id;
-      // Set parameters data
+  }
+  $form = $new_form;
+  // Hide the operations fields
+  $form['operations']['#access'] = FALSE;
+
+  $form['#submit'][] = 'smartdocs_wsdl_wsclient_service_form_submit';
+}
+
+/**
+ * Submit callback for the web service form to populate operations and data
+ * types of the new SOAP service.
+ */
+function smartdocs_wsdl_wsclient_service_form_submit($form, &$form_state) {
+  if ($form_state['values']['type'] == 'soap' && ($form_state['op'] == 'add' || $form_state['op'] == 'edit')) {
+    $service_id = $form_state['wsclient_service']->id;
+    $service = entity_load_single('wsclient_service', $service_id);
+    smartdocs_wsdl_save_description($service_id, $form_state['values']['description']);
+    smartdocs_wsdl_update_wsclient_service($service);
+  }
+}
+
+function smartdocs_wsdl_load_description($service_id) {
+  return db_select('wsclient_service', 'ws')
+    ->fields('ws', array('description'))
+    ->condition('ws.id', $service_id)
+    ->execute()
+    ->fetchField();
+}
+
+function smartdocs_wsdl_save_description($service_id, $description) {
+  db_update('wsclient_service')
+    ->fields(array('description' => $description))
+    ->condition('id', $service_id)
+    ->execute();
+}
+
+function smartdocs_wsdl_create_wsclient_service($url) {
+  $service = entity_create('wsclient_service', array('type' => 'soap'));
+  $service->label = 'Service ' . date('d-m-Y H:i:s');
+  $service->name = 'service_' . date('d_m_Y_H_i_s');
+  $service->url = $url;
+  $service->status = 1;
+  $service->save();
+  return $service;
+}
+
+function smartdocs_wsdl_update_wsclient_service($service) {
+  $endpoint = $service->endpoint();
+  $endpoint->initializeMetadata(TRUE);
+  $service->save();
+  smartdocs_wsdl_update_service_operations($service);
+  rules_clear_cache();
+  $service->clearCache();
+  drupal_set_message(t('Operations and data types of the SOAP service have been imported automatically. If the service expects data types with properties as lists (multiple values for the property), please check the multiple flag on those properties. This cannot be auto-detected at the moment.'));
+}
+
+function smartdocs_wsdl_update_service_operations($entity) {
+  global $user;
+
+  $documentations = array();
+  $xml = simplexml_load_file($entity->url);
+  $array = json_decode(json_encode((array)$xml), TRUE);
+  foreach ($array['portType']['operation'] as $operation) {
+    $documentations[$operation['@attributes']['name']] = $operation['documentation'];
+  }
+  // drupal_set_message('<pre>' . print_r($documentations, 1) . '</pre>');
+
+  // List of new operations
+  $operations = $entity->operations;
+  // Get old operations for this service
+  $query = db_select('node', 'n');
+  $query->innerjoin('field_data_field_service_ref', 'sr', 'sr.entity_id = n.nid');
+  $query->fields('n', array('nid', 'title'));
+  $query->condition('sr.field_service_ref_target_id', $entity->id, '=');
+  $result = $query->execute();
+  while ($node = $result->fetchAssoc()) {
+    // If old operation exists in new operations list
+    if (isset($operations[$node['title']])) {
+      // Get new operation data
+      $operation = $operations[$node['title']];
+      // Load old operation node
+      $old_node = node_load($node['nid']);
+      // Clear old parameters data
+      $old_node->field_parameters['und'] = array();
+      // Set new parameters data
       $i = 0;
       foreach ($operation['parameter'] as $param_name => $parameter) {
-        $node->field_parameters['und'][$i]['value'] = $param_name . ': ' . $parameter['type'];
+        $old_node->field_parameters['und'][$i]['value'] = $param_name . ': ' . $parameter['type'];
         $i++;
       }
-      // Save new operation node
-      $node = node_submit($node);
-      node_save($node);
+      // Set new documentation data
+      if (isset($documentations[$operation['label']])) {
+        $old_node->field_documentation['und'][0]['value'] = $documentations[$operation['label']];
+      }
+      // Update old operation node
+      node_save($old_node);
+      // Unset old operation from new operations list
+      unset($operations[$node['title']]);
     }
+    // Else if old operation does not exist in new operations list
+    else {
+      // Delete old operation node
+      node_delete($node['nid']);
+    }
+  }
+  // New operations left
+  foreach ($operations as $name => $operation) {
+    // Create operation node
+    $node = new stdClass();
+    // Set operation label as node title
+    $node->title = $operation['label'];
+    $node->type = "operations";
+    node_object_prepare($node);
+    // Set global user as node user
+    $node->uid = $user->uid;
+    $node->status = 1;
+    // Set service id as reference on the service
+    $node->field_service_ref['und'][0]['target_id'] = $entity->id;
+    // Set parameters data
+    $i = 0;
+    foreach ($operation['parameter'] as $param_name => $parameter) {
+      $node->field_parameters['und'][$i]['value'] = $param_name . ': ' . $parameter['type'];
+      $i++;
+    }
+    // Set documentation data
+    if (isset($documentations[$operation['label']])) {
+      $node->field_documentation['und'][0]['value'] = $documentations[$operation['label']];
+    }
+    // Save new operation node
+    $node = node_submit($node);
+    node_save($node);
   }
 }
 
@@ -77,7 +171,7 @@ function smartdocs_wsdl_entity_presave($entity, $type) {
  * hook_entity_delete()
  */
 function smartdocs_wsdl_entity_delete($entity, $type) {
-  /* Delete nodes for methods */
+  /* delete nodes for methods */
   if ($type == 'wsclient_service') {
     $query = db_select('node', 'n');
     $query->innerjoin('field_data_field_service_ref', 'sr', 'sr.entity_id = n.nid');
@@ -99,7 +193,6 @@ function smartdocs_wsdl_entity_delete($entity, $type) {
  * hook_node_view()
  */
 function smartdocs_wsdl_node_view($node, $view_mode, $langcode) {
-     // @todo some theming of fields
   if ($node->type == 'operations' && $view_mode == 'full') {
     if(isset($node->field_service_ref['und'][0]['entity'])) {
       $service = $node->field_service_ref['und'][0]['entity'];
@@ -164,7 +257,43 @@ function smartdocs_wsdl_menu() {
     'file' => 'smartdocs_wsdl.inc',
     'file path' => drupal_get_path('module', 'smartdocs_wsdl'),
   ); 
+
+  $items['smartdocs_wsdl_import'] = array(
+    'title' => 'smartdocs wsdl import',
+    'page callback' => 'smartdocs_wsdl_import',
+    'delivery callback' => 'drupal_json_output',
+    'access callback' => 'smartdocs_wsdl_basic_auth',
+    'access arguments' => array(
+      'smartdocs_wsdl_import',
+      'username', // username
+      'password', // password
+      str_replace('/', '_', 'smartdocs_wsdl_import'),
+      'user_access',
+      array('access content'),
+    ),
+    'type' => MENU_CALLBACK,
+  ); 
   return $items;
+}
+
+function smartdocs_wsdl_import() {
+  $url = $_POST['url'];
+
+  $service_id = db_select('wsclient_service', 'ws')
+    ->fields('ws', array('id'))
+    ->condition('ws.url', $url)
+    ->execute()
+    ->fetchField();
+  if (is_numeric($service_id)) {
+    $service = entity_load_single('wsclient_service', $service_id);
+    smartdocs_wsdl_update_wsclient_service($service);
+    return "UPDATE $service_id SERVICE";
+  }
+  else {
+    $service = smartdocs_wsdl_create_wsclient_service($url);
+    smartdocs_wsdl_update_wsclient_service($service);
+    return 'CREATE ' . $service->id . ' SERVICE';
+  }
 }
 
 /**
@@ -187,14 +316,66 @@ function smartdocs_wsdl_map_type($service_name, $service_types, $type) {
   return $type;
 }
 
-
-/*Get webservice label for soap_api/% view from wsclient_service custom entity in database this is the only place this info is stored */
 function smartdocs_wsdl_views_pre_render(&$view) {
   if ($view->name == 'operations' && $view->current_display == 'page') {
     $view->build_info['title'] = db_select('wsclient_service', 's')
-      ->fields('s', array('label')) // Get label column from wsclient_service table which is human readable name of webservice
+      ->fields('s', array('label'))
       ->condition('s.id', $view->args[0])
       ->execute()
       ->fetchField();
   }
+}
+
+
+/**
+ * Perform basic HTTP authentication.
+ *
+ * @param string $path
+ *   Path to protect.
+ * @param string $username
+ *   Desired username.
+ * @param string $password
+ *   Desired password.
+ * @param string $id
+ *   An unique ID for flood controlling.
+ * @param string $callback
+ *   Additional callback for checking accessibility.
+ * @param array $arguments
+ *   List of arguments for additional access callback.
+ *
+ * @return bool
+ *   A state of authentication.
+ */
+function smartdocs_wsdl_basic_auth($path, $username, $password, $id = 'basic_auth', $callback = '', array $arguments = []) {
+  // We're facing cases when useful navigation modules are rendering whole menu
+  // structure to provide flexible navigation and, during the rendering, access
+  // callbacks are triggers in order to check whether menu item can be shown.
+  // As a result this forces basic HTTP authentication headers to be sent when
+  // they are not needed to be sent. Let's try to prevent this for some of the
+  // cases...
+  if (current_path() !== $path) {
+    return TRUE;
+  }
+
+  // Credentials for authentication were received.
+  if (isset($_SERVER['PHP_AUTH_PW'], $_SERVER['PHP_AUTH_USER'])) {
+    $event = $id . '_basic_auth_failed_login_ip';
+    $limit = variable_get($id . '_basic_auth_threshold_limit', 5);
+    $window = variable_get($id . '_basic_auth_threshold_window', 3600);
+
+    if (flood_is_allowed($event, $limit, $window)) {
+      if ($password === $_SERVER['PHP_AUTH_PW'] && $username === $_SERVER['PHP_AUTH_USER']) {
+        flood_clear_event($event);
+
+        return !empty($callback) && is_callable($callback) ? (bool) call_user_func_array($callback, $arguments) : TRUE;
+      }
+
+      flood_register_event($event, $window);
+    }
+  }
+
+  header('WWW-Authenticate: Basic realm="Restricted Area"');
+  header('HTTP/1.1 401 Unauthorized');
+
+  exit('Access denied.');
 }

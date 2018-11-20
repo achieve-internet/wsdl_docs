@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ */
+
+/**
+ * Add the description field in the entity.
+ */
+function smartdocs_wsdl_schema_alter(&$schema) {
+  $schema['wsclient_service']['fields']['description'] = array(
+    'description' => 'The description of the service.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => FALSE,
+  );
+}
+
+function smartdocs_wsdl_install() {
+  db_add_field('wsclient_service', 'description', array(
+    'description' => 'The description of the service.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => FALSE,
+  ));
+}
+
+function smartdocs_wsdl_uninstall() {
+  db_drop_field('wsclient_service', 'description');
+}

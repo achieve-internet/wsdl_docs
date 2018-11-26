@@ -40,7 +40,6 @@ function smartdocs_wsdl_operation_invoke($form, $form_state, $service, $operatio
       $form['parameters'][$param] = smartdocs_wsdl_request_data($param, $info['type'], @$info['description'], @$form_state['values']['parameters'], $datatypes, @$info['required']);
   }
 
-
   $form['execute'] = array(
     '#type' => 'submit',
     '#value' => 'Execute Request',
@@ -155,14 +154,9 @@ function smartdocs_wsdl_certify_operation_invoke($form, &$form_state, $service, 
   foreach ($operation['parameter'] as $param => $info) {
       $form['parameters'][$param] = smartdocs_wsdl_certify_data($param, $info['type'], @$info['description'], @$form_state['values']['parameters'], $datatypes, @$info['required'], $excludeFields, $defaultValues);
   }
-  
-/*  replacing 'referenceNumberRequest' with $ref_Num_Request - Gurpreet
-  $form['parameters']['referenceNumberRequest']['referenceNumber']['#prefix'] = '<div id="replace_reference_number_value">';
-  $form['parameters']['referenceNumberRequest']['referenceNumber']['#suffix'] =  '</div>';
-*/
+
   $form['parameters'][$ref_Num_Request]['referenceNumber']['#prefix'] = '<div id="replace_reference_number_value">';
   $form['parameters'][$ref_Num_Request]['referenceNumber']['#suffix'] =  '</div>';
-  
 
   
   $form['execute'] = array(
@@ -427,10 +421,8 @@ function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
   }
   else {
     $operation = $form_state['build_info']['args'][1];
-  }
 
-  //firep($operation);
-  //firep($service);
+  }
 
   // Convert the form values into a data structure suitable for making the query.
   // Magic?
@@ -803,8 +795,6 @@ function smartdocs_wsdl_certify_data($label, $type, $description, $data, $dataty
       //pre-populate fields with developer data
       elseif (array_key_exists($field_id, $attributes))
       {
-        //$one = $attributes[$field_id];
-        //firep("$field_id - true - $one");
         $element[$field_id] = smartdocs_wsdl_certify_data($field_id, $field_info['type'], @$field_info['description'], $attributes[$field_id], $datatypes, @$field_info['required'], $excludeFields, $defaultValues);
       }
       elseif($field_id == "timeStamp")
@@ -816,8 +806,6 @@ function smartdocs_wsdl_certify_data($label, $type, $description, $data, $dataty
       }
       else
       {
-        //$two = $attributes[$field_id];
-        //firep("$field_id - false - $two ");
        $element[$field_id] = smartdocs_wsdl_certify_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes, @$field_info['required'], $excludeFields, $defaultValues);
       }
     }

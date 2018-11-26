@@ -571,7 +571,6 @@ function smartdocs_wsdl_views_pre_render(&$view) {
   }
 }
 
-
 /**
  * Perform basic HTTP authentication.
  *

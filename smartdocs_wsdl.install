@@ -14,6 +14,16 @@ function smartdocs_wsdl_schema_alter(&$schema) {
     'length' => 255,
     'not null' => FALSE,
   );
+  $schema['wsclient_service']['fields']['uid'] = array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  $schema['wsclient_service']['fields']['created'] = array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
 }
 
 function smartdocs_wsdl_install() {
@@ -23,8 +33,20 @@ function smartdocs_wsdl_install() {
     'length' => 255,
     'not null' => FALSE,
   ));
+  db_add_field('wsclient_service', 'uid', array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+  db_add_field('wsclient_service', 'created', array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
 }
 
 function smartdocs_wsdl_uninstall() {
   db_drop_field('wsclient_service', 'description');
+  db_drop_field('wsclient_service', 'uid');
+  db_drop_field('wsclient_service', 'created');
 }

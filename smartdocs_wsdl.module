@@ -27,7 +27,7 @@ function smartdocs_wsdl_form_wsclient_service_form_alter(&$form, &$form_state) {
   }
   $form = $new_form;
 
-  if ($form_state['wsclient_service']->is_new) {
+  if (isset($form_state['wsclient_service']->is_new) && $form_state['wsclient_service']->is_new == 1) {
     // Set soap to default on import drop-down and hide
     $form['type']['#default_value'] = 'soap';
     $form['type']['#access'] = FALSE;
@@ -51,6 +51,9 @@ function smartdocs_wsdl_wsclient_service_form_submit($form, &$form_state) {
     $service_id = $form_state['wsclient_service']->id;
     $service = entity_load_single('wsclient_service', $service_id);
     smartdocs_wsdl_update_wsclient_service($service);
+    if ($form['#action'] == '/admin/content/smartdocs_wsdl/add') {
+      $form_state['redirect'] = 'admin/content/smartdocs_wsdl';
+    }
   }
 }
 
@@ -87,7 +90,7 @@ function smartdocs_wsdl_update_wsclient_service($service) {
   smartdocs_wsdl_update_service_operations($service);
   rules_clear_cache();
   $service->clearCache();
-  drupal_set_message(t('Operations and data types of the SOAP service have been imported automatically. If the service expects data types with properties as lists (multiple values for the property), please check the multiple flag on those properties. This cannot be auto-detected at the moment.'));
+  //drupal_set_message(t('Operations and data types of the SOAP service have been imported automatically. If the service expects data types with properties as lists (multiple values for the property), please check the multiple flag on those properties. This cannot be auto-detected at the moment.'));
 }
 
 function smartdocs_wsdl_update_wsclient_service_upload($service, $client, $xml, $array) {
@@ -102,28 +105,34 @@ function smartdocs_wsdl_update_wsclient_service_upload($service, $client, $xml, 
   smartdocs_wsdl_update_service_operations_upload($service, $xml, $array);
   rules_clear_cache();
   $service->clearCache();
-  drupal_set_message(t('Operations and data types of the SOAP service have been imported automatically. If the service expects data types with properties as lists (multiple values for the property), please check the multiple flag on those properties. This cannot be auto-detected at the moment.'));
+  //drupal_set_message(t('Operations and data types of the SOAP service have been imported automatically. If the service expects data types with properties as lists (multiple values for the property), please check the multiple flag on those properties. This cannot be auto-detected at the moment.'));
 }
 
 function smartdocs_wsdl_update_service_operations($entity) {
   global $user;
 
-  $xml = file_get_contents($entity->url);
-  $clean_xml = str_ireplace(['SOAP-ENV:', 'SOAP:'], '', $xml);
+  $wsdl = file_get_contents($entity->url);
+  $clean_xml = str_ireplace(['SOAP-ENV:', 'SOAP:', 'wsdl:', 'wsdlsoap:'], '', $wsdl);
   $xml = simplexml_load_string($clean_xml);
+  // drupal_set_message('<pre>' . print_r($xml, 1) . '</pre>');
   $array = json_decode(json_encode((array)$xml), TRUE);
 
   $documentations = $styles = $outputs = array();
   if (!empty($array)) {
     foreach ($array['portType']['operation'] as $operation) {
-      $documentations[$operation['@attributes']['name']] = $operation['documentation'];
+      if (!empty($operation['documentation'])) {
+        $documentations[$operation['@attributes']['name']] = $operation['documentation'];
+      }
     }
     foreach ($array['binding']['operation'] as $key => $operation) {
-      $styles[$operation['@attributes']['name']] = $operation['operation']['@attributes']['style'];
-      $outputs[$operation['@attributes']['name']] = $xml->binding->operation[$key]->output->body->asXML();
+      if (!empty($operation['operation']['@attributes']['style'])) {
+        $styles[$operation['@attributes']['name']] = $operation['operation']['@attributes']['style'];
+      }
+      if (!empty($operation['operation']['body'])) {
+        $outputs[$operation['@attributes']['name']] = $xml->binding->operation[$key]->output->body->asXML();
+      }
     }
   }
-  // drupal_set_message('<pre>' . print_r($documentations, 1) . '</pre>');
 
   // List of new operations
   $operations = $entity->operations;
@@ -148,18 +157,10 @@ function smartdocs_wsdl_update_service_operations($entity) {
         $old_node->field_parameters['und'][$i]['value'] = $param_name . ': ' . $parameter['type'];
         $i++;
       }
-      // Set new documentation data
-      if (isset($documentations[$operation['label']])) {
-        $old_node->field_documentation['und'][0]['value'] = $documentations[$operation['label']];
-      }
-      // Set new style data
-      if (isset($styles[$operation['label']])) {
-        $old_node->field_style['und'][0]['value'] = $styles[$operation['label']];
-      }
-      // Set new output data
-      if (isset($outputs[$operation['label']])) {
-        $old_node->field_output['und'][0]['value'] = $outputs[$operation['label']];
-      }
+      // Set new documentation, style and output data
+      $old_node->field_documentation['und'][0]['value'] = $documentations[$operation['label']] ?: '';
+      $old_node->field_style['und'][0]['value'] = $styles[$operation['label']] ?: '';
+      $old_node->field_output['und'][0]['value'] = $outputs[$operation['label']] ?: '';
       // Update old operation node
       node_save($old_node);
       // Unset old operation from new operations list
@@ -190,10 +191,10 @@ function smartdocs_wsdl_update_service_operations($entity) {
       $node->field_parameters['und'][$i]['value'] = $param_name . ': ' . $parameter['type'];
       $i++;
     }
-    // Set documentation data
-    if (isset($documentations[$operation['label']])) {
-      $node->field_documentation['und'][0]['value'] = $documentations[$operation['label']];
-    }
+    // Set documentation, style and output data
+    $node->field_documentation['und'][0]['value'] = $documentations[$operation['label']] ?: '';
+    $node->field_style['und'][0]['value'] = $styles[$operation['label']] ?: '';
+    $node->field_output['und'][0]['value'] = $outputs[$operation['label']] ?: '';
     // Save new operation node
     $node = node_submit($node);
     node_save($node);
@@ -206,11 +207,17 @@ function smartdocs_wsdl_update_service_operations_upload($entity, $xml, $array) 
   $documentations = $styles = $outputs = array();
   if (!empty($array)) {
     foreach ($array['portType']['operation'] as $operation) {
-      $documentations[$operation['@attributes']['name']] = $operation['documentation'];
+      if (!empty($operation['documentation'])) {
+        $documentations[$operation['@attributes']['name']] = $operation['documentation'];
+      }
     }
     foreach ($array['binding']['operation'] as $key => $operation) {
-      $styles[$operation['@attributes']['name']] = $operation['operation']['@attributes']['style'];
-      $outputs[$operation['@attributes']['name']] = $xml->binding->operation[$key]->output->body->asXML();
+      if (!empty($operation['operation']['@attributes']['style'])) {
+        $styles[$operation['@attributes']['name']] = $operation['operation']['@attributes']['style'];
+      }
+      if (!empty($operation['operation']['body'])) {
+        $outputs[$operation['@attributes']['name']] = $xml->binding->operation[$key]->output->body->asXML();
+      }
     }
   }
 
@@ -237,18 +244,10 @@ function smartdocs_wsdl_update_service_operations_upload($entity, $xml, $array) 
         $old_node->field_parameters['und'][$i]['value'] = $param_name . ': ' . $parameter['type'];
         $i++;
       }
-      // Set new documentation data
-      if (isset($documentations[$operation['label']])) {
-        $old_node->field_documentation['und'][0]['value'] = $documentations[$operation['label']];
-      }
-      // Set new style data
-      if (isset($styles[$operation['label']])) {
-        $old_node->field_style['und'][0]['value'] = $styles[$operation['label']];
-      }
-      // Set new output data
-      if (isset($outputs[$operation['label']])) {
-        $old_node->field_output['und'][0]['value'] = $outputs[$operation['label']];
-      }
+      // Set new documentation, style and output data
+      $old_node->field_documentation['und'][0]['value'] = $documentations[$operation['label']] ?: '';
+      $old_node->field_style['und'][0]['value'] = $styles[$operation['label']] ?: '';
+      $old_node->field_output['und'][0]['value'] = $outputs[$operation['label']] ?: '';
       // Update old operation node
       node_save($old_node);
       // Unset old operation from new operations list
@@ -279,10 +278,10 @@ function smartdocs_wsdl_update_service_operations_upload($entity, $xml, $array) 
       $node->field_parameters['und'][$i]['value'] = $param_name . ': ' . $parameter['type'];
       $i++;
     }
-    // Set documentation data
-    if (isset($documentations[$operation['label']])) {
-      $node->field_documentation['und'][0]['value'] = $documentations[$operation['label']];
-    }
+    // Set documentation, style and output data
+    $node->field_documentation['und'][0]['value'] = $documentations[$operation['label']] ?: '';
+    $node->field_style['und'][0]['value'] = $styles[$operation['label']] ?: '';
+    $node->field_output['und'][0]['value'] = $outputs[$operation['label']] ?: '';
     // Save new operation node
     $node = node_submit($node);
     node_save($node);
@@ -331,7 +330,7 @@ function smartdocs_wsdl_node_view($node, $view_mode, $langcode) {
       $operation = $node->field_service_ref['und'][0]['entity']->operations[$node->title];
       $form = drupal_get_form('smartdocs_wsdl_operation_invoke', $service, $operation);
       $form['transaction']['#attributes']['class'][] = 'element-hidden';
-      $node->content['reguest'] = array(
+      $node->content['apiform'] = array(
         '#markup' => drupal_render($form),
         '#weight' => 0,
       );
@@ -404,15 +403,16 @@ function smartdocs_wsdl_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items['admin/config/services/smartdocs_wsdl'] = array(
+  $items['admin/content/smartdocs_wsdl'] = array(
     'title' => 'SmartDocs WSDL',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('smartdocs_wsdl_form'),
     'access arguments' => array('access administration pages'),
     'type' => MENU_NORMAL_ITEM,
+	'weight' => -99,
   );
 
-  $items['admin/config/services/smartdocs_wsdl/add'] = array(
+  $items['admin/content/smartdocs_wsdl/add'] = array(
     'title callback' => 'entity_ui_get_action_title',
     'title arguments' => array('add', 'wsclient_service'),
     'page callback' => 'entity_ui_get_form',
@@ -422,7 +422,7 @@ function smartdocs_wsdl_menu() {
     'type' => MENU_LOCAL_ACTION,
   );
 
-  $items['admin/config/services/smartdocs_wsdl/basic_auth'] = array(
+  $items['admin/content/smartdocs_wsdl/basic_auth'] = array(
     'title' => 'SmartDocs WSDL Basic Auth',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('smartdocs_wsdl_basic_auth_form'),
@@ -456,24 +456,22 @@ function smartdocs_wsdl_import() {
     }
   }
   else {
-    // $file = htmlentities(file_get_contents('php://input'));
-    $xml = file_get_contents('php://input');
-
-    $path = drupal_get_path('module', 'smartdocs_wsdl') . '/tempfile.wsdl';
-    file_put_contents($path, $xml);
-    $client = new SOAPClient($path);
-
-    $clean_xml = str_ireplace(['SOAP-ENV:', 'SOAP:'], '', $xml);
+    $wsdl = file_get_contents('php://input');
+    $clean_xml = str_ireplace(['SOAP-ENV:', 'SOAP:', 'wsdl:', 'wsdlsoap:'], '', $wsdl);
     $xml = simplexml_load_string($clean_xml);
     if (empty($xml)) {
       return 'ERROR input file is not XML';
     }
     $array = json_decode(json_encode((array)$xml), TRUE);
-    $name = $array['service']['@attributes']['name'];
+    // Save temp file
+    $path = drupal_get_path('module', 'smartdocs_wsdl') . '/tempfile.wsdl';
+    file_put_contents($path, $wsdl);
+    $client = new SOAPClient($path);
+
+    $name = !empty($_GET['name']) ? $_GET['name'] : $array['service']['@attributes']['name'];
     if (empty($name)) {
       return 'ERROR: you must specify the name parameter';
     }
-    // watchdog('smartdocs_wsdl', print_r($array['service']['@attributes']['name'], 1));
     $service_id = db_select('wsclient_service', 'ws')
       ->fields('ws', array('id'))
       ->condition('ws.name', $name)
@@ -490,8 +488,6 @@ function smartdocs_wsdl_import() {
       return 'CREATE ' . $service->id . ' SERVICE';
     }
   }
-
-  return 'ERROR input data';
 }
 
 function smartdocs_wsdl_basic_auth_form($form, &$form_state) {
@@ -516,9 +512,9 @@ function smartdocs_wsdl_form($form, &$form_state) {
   $form['table']['#header'][4]['colspan'] -= 2;
   foreach ($form['table']['#rows'] as &$row) {
     $service = $row[0]['data']['#url']['options']['entity'];
-    if (!empty($service->url)) {
+   /* if (!empty($service->url)) { //Change label to URL for easy debugging
       $row[0]['data']['#label'] = $service->url;
-    }
+    }*/
     $row[0]['data']['#url']['path'] = 'soap_apis/' . $row[0]['data']['#url']['options']['entity']->id;
     if ($service->uid > 0) {
       $username = db_select('users', 'u')
@@ -531,7 +527,7 @@ function smartdocs_wsdl_form($form, &$form_state) {
     else {
       $username = 'REST import';
     }
-    $created = date('d-m-Y H:i:s', $service->created);
+    $created = date('l m-d-Y H:i:s', $service->created);
     $row = array($row[0], $row[1], $username, $created, $row[2], $row[4]);
   }
 

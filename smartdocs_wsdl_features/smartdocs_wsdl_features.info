@@ -1,0 +1,14 @@
+name = SmartDocs WSDL Features
+description = Views for SmartDocs WSDL Module
+core = 7.x
+package = SmartDocs WSDL
+version = 7.x-1.0
+dependencies[] = ctools
+dependencies[] = views
+dependencies[] = wsclient
+dependencies[] = wsclient_soap
+dependencies[] = wsclient_ui
+features[ctools][] = views:views_default:3.0
+features[features_api][] = api:2
+features[views_view][] = operations
+features[views_view][] = api_reference

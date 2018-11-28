@@ -8,6 +8,15 @@ include_once 'smartdocs_wsdl.inc';
 include_once 'smartdocs_wsdl.endpoint.inc';
 
 /**
+ * Implements hook_menu_alter().
+ *
+ * Hide default webservice menu because it could confuse users, if we make this contrib may want to remove this or make it conditional.
+ */
+function smartdocs_wsdl_menu_alter(&$items) {
+  $items['admin/config/services']['access callback'] = FALSE;
+}
+
+/**
  * Publish our testing UI and ajax callbacks.
  *
  * Implements hook_menu().

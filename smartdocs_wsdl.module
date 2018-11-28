@@ -78,16 +78,17 @@ function smartdocs_wsdl_menu() {
     'page arguments' => array('smartdocs_wsdl_form'),
     'access arguments' => array('access administration pages'),
     'type' => MENU_NORMAL_ITEM,
+	'description'=> "SmartDocs for SOAP webservices",
     'weight' => -99,
   );
 
   $items['admin/content/smartdocs_wsdl/add'] = array(
-    'title callback' => 'entity_ui_get_action_title',
-    'title arguments' => array('add', 'wsclient_service'),
+	'title' => 'Add SmartDocs WSDL',
     'page callback' => 'entity_ui_get_form',
     'page arguments' => array('wsclient_service', NULL, 'add'),
     'access callback' => 'entity_access',
     'access arguments' => array('create', 'wsclient_service'),
+	'description'=> "Import WSDL files to create docs for your SOAP services",
     'type' => MENU_LOCAL_ACTION,
   );
 
@@ -96,6 +97,7 @@ function smartdocs_wsdl_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('smartdocs_wsdl_basic_auth_form'),
     'access arguments' => array('access administration pages'),
+	'description'=> "Configure basic auth for your rest endpoint /smartdocs_wsdl_import used for CI/CD",
     'type' => MENU_LOCAL_ACTION,
   );
 

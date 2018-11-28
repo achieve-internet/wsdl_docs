@@ -102,7 +102,7 @@ function smartdocs_wsdl_menu() {
   );
 
   $items['admin/content/smartdocs_wsdl/basic_auth'] = array(
-    'title' => 'SmartDocs WSDL Basic Auth',
+    'title' => 'Basic Auth for REST Import',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('smartdocs_wsdl_basic_auth_form'),
     'access arguments' => array('access administration pages'),

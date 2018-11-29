@@ -144,16 +144,18 @@ function smartdocs_wsdl_import() {
       return 'ERROR input file is not XML';
     }
 
-    // Save temp file
-    $path = drupal_get_path('module', 'smartdocs_wsdl') . '/tempfile.wsdl';
-    file_put_contents($path, $wsdl);
-    $client = new SOAPClient($path);
-
     $service_name = $DOMDocument->getElementsByTagName('service')[0]->getAttribute('name');
     $name = !empty($_GET['name']) ? $_GET['name'] : $service_name;
     if (empty($name)) {
       return 'ERROR: you must specify the name parameter';
     }
+
+    // Save wsdl file
+    $directory = 'private://smartdocs_wsdl_files/';
+    file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+    $filename = $directory . $name . '.wsdl';
+    file_unmanaged_save_data($wsdl, $filename, FILE_EXISTS_REPLACE);
+
     $service_id = db_select('wsclient_service', 'ws')
       ->fields('ws', array('id'))
       ->condition('ws.name', $name)
@@ -161,12 +163,12 @@ function smartdocs_wsdl_import() {
       ->fetchField();
     if (is_numeric($service_id)) {
       $service = entity_load_single('wsclient_service', $service_id);
-      smartdocs_wsdl_update_wsclient_service_upload($service, $client, $DOMDocument);
+      smartdocs_wsdl_update_wsclient_service_upload($service, $DOMDocument);
       return "UPDATE $service_id SERVICE";
     }
     else {
       $service = smartdocs_wsdl_create_wsclient_service_upload($name);
-      smartdocs_wsdl_update_wsclient_service_upload($service, $client, $DOMDocument);
+      smartdocs_wsdl_update_wsclient_service_upload($service, $DOMDocument);
       return 'CREATE ' . $service->id . ' SERVICE';
     }
   }
@@ -212,18 +214,10 @@ function smartdocs_wsdl_update_wsclient_service($service) {
   //drupal_set_message(t('Operations and data types of the SOAP service have been imported automatically. If the service expects data types with properties as lists (multiple values for the property), please check the multiple flag on those properties. This cannot be auto-detected at the moment.'));
 }
 
-function smartdocs_wsdl_update_wsclient_service_upload($service, $client, $DOMDocument) {
+function smartdocs_wsdl_update_wsclient_service_upload($service, $DOMDocument) {
   $endpoint = $service->endpoint();
   $endpoint->initializeMetadata(TRUE);
   $service->save();
-
-  // initializeMetadata
-  /*$data_types = wsclient_soap_parse_types($client->__getTypes());
-  $operations = wsclient_soap_parse_operations($client->__getFunctions());
-  $service->datatypes = $data_types;
-  $service->operations = $operations;
-  $service->clearCache();
-  $service->save();*/
 
   smartdocs_wsdl_update_service_operations($service, $DOMDocument);
   rules_clear_cache();
@@ -358,9 +352,9 @@ function smartdocs_wsdl_form_wsclient_service_form_alter(&$form, &$form_state) {
   }
   else {
     // Hide the fields
-    // $form['operations']['#access'] = FALSE;
-    // $form['datatypes']['#access'] = FALSE;
-    // $form['global_parameters']['#access'] = FALSE;
+    $form['operations']['#access'] = FALSE;
+    $form['datatypes']['#access'] = FALSE;
+    $form['global_parameters']['#access'] = FALSE;
   }
 
   $form['#submit'][] = 'smartdocs_wsdl_wsclient_service_form_submit';
@@ -396,8 +390,10 @@ function smartdocs_wsdl_entity_insert($entity, $type) {
  * Implements hook_entity_delete().
  */
 function smartdocs_wsdl_entity_delete($entity, $type) {
-  /* delete nodes for methods */
   if ($type == 'wsclient_service') {
+    // delete wsdl file
+    file_unmanaged_delete('private://smartdocs_wsdl_files/' . $entity->label . '.wsdl');
+    // delete nodes for methods
     $query = db_select('node', 'n');
     $query->innerjoin('field_data_field_service_ref', 'sr', 'sr.entity_id = n.nid');
     $query->fields('n', array('nid'));

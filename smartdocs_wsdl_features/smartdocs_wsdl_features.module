@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the SmartDocs WSDL Features feature.
+ */
+
+include_once 'smartdocs_wsdl_features.features.inc';

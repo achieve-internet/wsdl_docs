@@ -1,11 +1,16 @@
 <?php
+
 /**
  * @file
  * Provides a UI client for SOAP services
  */
 
 include_once 'smartdocs_wsdl.inc';
-include_once 'smartdocs_wsdl.endpoint.inc';
+
+/**
+ * Directory for the services files.
+ */
+define('WSDL_DIRECTORY', 'private://smartdocs_wsdl_files/');
 
 /**
  * Implements hook_menu_alter().
@@ -151,9 +156,9 @@ function smartdocs_wsdl_import() {
     }
 
     // Save wsdl file
-    $directory = 'private://smartdocs_wsdl_files/';
+    $directory = WSDL_DIRECTORY;
     file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
-    $filename = $directory . $name . '.wsdl';
+    $filename = WSDL_DIRECTORY . $name . '.wsdl';
     file_unmanaged_save_data($wsdl, $filename, FILE_EXISTS_REPLACE);
 
     $service_id = db_select('wsclient_service', 'ws')
@@ -167,7 +172,7 @@ function smartdocs_wsdl_import() {
       return "UPDATE $service_id SERVICE";
     }
     else {
-      $service = smartdocs_wsdl_create_wsclient_service_upload($name);
+      $service = smartdocs_wsdl_create_wsclient_service_upload($name, $filename);
       smartdocs_wsdl_update_wsclient_service_upload($service, $DOMDocument);
       return 'CREATE ' . $service->id . ' SERVICE';
     }
@@ -190,11 +195,12 @@ function smartdocs_wsdl_create_wsclient_service($url, $name = '') {
   return $service;
 }
 
-function smartdocs_wsdl_create_wsclient_service_upload($name) {
+function smartdocs_wsdl_create_wsclient_service_upload($name, $filename) {
   $service = entity_create('wsclient_service', array('type' => 'soap'));
   $service->label = $name;
   $service->name = strtolower(str_replace('-', '_', str_replace(' ', '_', $name)));
-  $service->url = '';
+  $service->url = $filename;
+  $service->settings = array('options' => array('cache_wsdl' => WSDL_CACHE_NONE));
   $service->status = 1;
   $service->save();
   return $service;
@@ -225,20 +231,143 @@ function smartdocs_wsdl_update_wsclient_service_upload($service, $DOMDocument) {
   //drupal_set_message(t('Operations and data types of the SOAP service have been imported automatically. If the service expects data types with properties as lists (multiple values for the property), please check the multiple flag on those properties. This cannot be auto-detected at the moment.'));
 }
 
+function _smartdocs_wsdl_rem_namespace($str) {
+  $arr = explode(':', $str, 2);
+  return isset($arr[1]) ? $arr[1] : $arr[0];
+}
+
+function _smartdocs_wsdl_get_output($operation_name, &$_outputs_messages, &$_messages_elements, &$_elements_types, &$_types_properties) {
+  $messages = $_outputs_messages[$operation_name];
+  // first port
+  $message = $messages[0];
+  $part_name = $_messages_elements[$message]['name'];
+  $text = '';
+  if (isset($_messages_elements[$message]['element'])) {
+    $element = $_messages_elements[$message]['element'];
+    $element_name = $_elements_types[$element]['name'];
+    $element_type = $_elements_types[$element]['type'];
+    $properties = $_types_properties[$element_type];
+    $text .= $part_name . ' type ' . $element . '<br>';
+    $text .= '<ul><li>' . $element_name . ' type ' . $element_type . '<ul>';
+    foreach ($properties as $property_name => $property) {
+      $text .= '<li>' . $property_name . ' - type ' . $property['type'] . '</li>';
+    }
+    $text .= '</ul></li></ul>';
+  }
+  elseif (isset($_messages_elements[$message]['type'])) {
+    $type = $_messages_elements[$message]['type'];
+    $properties = $_types_properties[$type];
+    $text .= $part_name . ' type ' . $type . '<br>';
+    $text .= '<ul>';
+    foreach ($properties as $property_name => $property) {
+      $text .= '<li>' . $property_name . ' - type ' . $property['type'] . '</li>';
+    }
+    $text .= '</ul>';
+  }
+
+  // drupal_set_message('<pre>' . print_r($text, 1) . '</pre>');
+  return $text;
+}
+
 function smartdocs_wsdl_update_service_operations($entity, $DOMDocument) {
   global $user;
 
-  $documentations = $styles = $outputs = array();
+  $documentations = $styles = $outputs = $outputs_messages = $messages_elements = $elements_types = $types_properties = array();
 
-  $operations = $DOMDocument->getElementsByTagName('portType')[0]->getElementsByTagName('operation');
-  foreach ($operations as $operation) {
-    $name = $operation->getAttribute('name');
-    // for documentation
-    $documentation = $operation->getElementsByTagName('documentation');
-    if ($documentation->length > 0) {
-      $documentations[$name] = $documentation[0]->nodeValue;
+  $portTypes = $DOMDocument->getElementsByTagName('portType');
+  foreach ($portTypes as $portType) {
+    $operations = $portType->getElementsByTagName('operation');
+    foreach ($operations as $operation) {
+      $operation_name = $operation->getAttribute('name');
+      // for documentation
+      if (!isset($documentations[$operation_name])) {
+        $documentation = $operation->getElementsByTagName('documentation');
+        if ($documentation->length > 0) {
+          $documentations[$operation_name] = $documentation[0]->nodeValue;
+        }
+      }
+      // for output (step 1)
+      $message = $operation->getElementsByTagName('output')[0]->getAttribute('message');
+      // remove "tns:"
+      $message = _smartdocs_wsdl_rem_namespace($message);
+      $outputs_messages[$message] = $operation_name;
+      $_outputs_messages[$operation_name][] = $message;
     }
   }
+  // watchdog('smartdocs_wsdl', '<pre>message in operation=' . print_r($outputs_messages, 1) . '</pre>');
+  watchdog('smartdocs_wsdl', '<pre>operation has message=' . print_r($_outputs_messages, 1) . '</pre>');
+
+  // for output (step 2)
+  $messages = $DOMDocument->getElementsByTagName('message');
+  foreach ($messages as $message) {
+    $message_name = $message->getAttribute('name');
+    if (isset($outputs_messages[$message_name])) {
+      $part = $message->getElementsByTagName('part')[0];
+      $part_name = $part->getAttribute('name');
+      if ($part->hasAttribute('element')) {
+        // $part_name = $part->getAttribute('name'); // Body
+        $element = $part->getAttribute('element');
+        // remove "tns:"
+        $element = _smartdocs_wsdl_rem_namespace($element);
+        $messages_elements[$element][] = $message_name;
+        $_messages_elements[$message_name] = array('name' => $part_name, 'element' => $element);
+      }
+      elseif ($part->hasAttribute('type')) {
+        $type = $part->getAttribute('type');
+        // remove "tns:"
+        $type = _smartdocs_wsdl_rem_namespace($type);
+        $messages_elements[$type][] = $message_name;
+        $_messages_elements[$message_name] = array('name' => $part_name, 'type' => $type);
+      }
+    }
+  }
+  // watchdog('smartdocs_wsdl', '<pre>element in message=' . print_r($messages_elements, 1) . '</pre>');
+  watchdog('smartdocs_wsdl', '<pre>message has element=' . print_r($_messages_elements, 1) . '</pre>');
+
+  // for output (step 3)
+  $schemas = $DOMDocument->getElementsByTagName('types')[0]->getElementsByTagName('schema');
+  foreach ($schemas as $schema) {
+    $elements = $schema->childNodes;
+    foreach ($elements as $element) {
+      if ($element->localName == 'element') {
+        $element_name = $element->getAttribute('name');
+        $element2_name = $element_name;
+        if (isset($messages_elements[$element_name])) {
+          // for complexType
+          if (!$element->hasAttribute('type')) {
+            $element = $element->getElementsByTagName('element')[0];
+            $element2_name = $element->getAttribute('name');
+          }
+          if ($element->hasAttribute('type')) {
+            $element_type = $element->getAttribute('type');
+            // remove "tns:"
+            $element_type = _smartdocs_wsdl_rem_namespace($element_type);
+            $elements_types[$element_type][] = $element_name;
+            $_elements_types[$element_name] = array('name' => $element2_name, 'type' => $element_type);
+          }
+        }
+      }
+    }
+  }
+  // watchdog('smartdocs_wsdl', '<pre>type in element=' . print_r($elements_types, 1) . '</pre>');
+  watchdog('smartdocs_wsdl', '<pre>element has type=' . print_r($_elements_types, 1) . '</pre>');
+
+  // for output (step 4)
+  foreach ($elements_types as $type => $element) {
+    $_types_properties[$type] = $entity->datatypes[$type]['property info'];
+  }
+  watchdog('smartdocs_wsdl', '<pre>type has property=' . print_r($_types_properties, 1) . '</pre>');
+
+  // Check
+  /*$messages = $_outputs_messages['GetFlightData'];
+  $text = 'GetFlightData<br>';
+  foreach ($messages as $message) {
+    $element = $_messages_elements[$message];
+    $type = $_elements_types[$element];
+    $properties = $_types_properties[$type];
+    $text .= ' - ' . $message . ' ' . $element . ' ' . $type . ' ' . print_r($properties, 1) . '<br>';
+  }
+  watchdog('smartdocs_wsdl', '<pre>text=' . $text . '</pre>');*/
 
   $operations = $DOMDocument->getElementsByTagName('binding')[0]->childNodes;
   foreach ($operations as $operation) {
@@ -250,10 +379,11 @@ function smartdocs_wsdl_update_service_operations($entity, $DOMDocument) {
         $styles[$name] = $operation2->getAttribute('style');
       }
       // for body
-      $body = $operation->getElementsByTagName('output')[0]->getElementsByTagName('body');
+      $outputs[$name] = _smartdocs_wsdl_get_output($name, $_outputs_messages, $_messages_elements, $_elements_types, $_types_properties);
+      /*$body = $operation->getElementsByTagName('output')[0]->getElementsByTagName('body');
       if ($body->length > 0) {
         $outputs[$name] = $DOMDocument->saveXML($body[0]);
-      }
+      }*/
     }
   }
 
@@ -318,6 +448,7 @@ function smartdocs_wsdl_update_service_operations($entity, $DOMDocument) {
     $node->field_documentation['und'][0]['value'] = $documentations[$operation['label']] ?: '';
     $node->field_style['und'][0]['value'] = $styles[$operation['label']] ?: '';
     $node->field_output['und'][0]['value'] = $outputs[$operation['label']] ?: '';
+    $node->field_output['und'][0]['format'] = 'full_html';
     // Save new operation node
     $node = node_submit($node);
     node_save($node);
@@ -357,7 +488,19 @@ function smartdocs_wsdl_form_wsclient_service_form_alter(&$form, &$form_state) {
     $form['global_parameters']['#access'] = FALSE;
   }
 
+  // replace the wsclient_ui_element_url_validate function
+  $form['url']['#element_validate'][0] = 'smartdocs_wsdl_wsclient_ui_element_url_validate';
+
   $form['#submit'][] = 'smartdocs_wsdl_wsclient_service_form_submit';
+}
+
+/**
+ * FAPI callback to validate a URL.
+ */
+function smartdocs_wsdl_wsclient_ui_element_url_validate($element, &$form_state) {
+  if (strpos($element['#value'], WSDL_DIRECTORY) === FALSE && !valid_url($element['#value'], TRUE)) {
+    form_error($element, t('Please enter a valid URL.'));
+  }
 }
 
 /**
@@ -392,7 +535,7 @@ function smartdocs_wsdl_entity_insert($entity, $type) {
 function smartdocs_wsdl_entity_delete($entity, $type) {
   if ($type == 'wsclient_service') {
     // delete wsdl file
-    file_unmanaged_delete('private://smartdocs_wsdl_files/' . $entity->label . '.wsdl');
+    file_unmanaged_delete(WSDL_DIRECTORY . $entity->label . '.wsdl');
     // delete nodes for methods
     $query = db_select('node', 'n');
     $query->innerjoin('field_data_field_service_ref', 'sr', 'sr.entity_id = n.nid');

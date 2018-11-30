@@ -13,6 +13,7 @@ Usage
   smartdocs_wsdl
   wsclient
   wsclient_soap
+  entityreference
 
 *Enable Features
   smartdocs_wsdl_features

@@ -597,22 +597,20 @@ function smartdocs_wsdl_request_data($label, $type, $description, $data, $dataty
       '#collapsible' => TRUE,
     );
 
-      global $user;
-      $currentUser = $user->mail;
-      $developer = entity_load('developer', array($currentUser), array(), TRUE);
-      $attributes = $developer[$currentUser]->attributes;
-      //dpm($attributes, "attributes");
+
+      $attributes = array();
+
 
     foreach ($datatype['property info'] as $field_id => $field_info) {
       // Recurse and get each bit to render its own input element.
       //pre-populate fields with developer data
-      if (array_key_exists($field_id, $attributes))
+      /*if (array_key_exists($field_id, $attributes))
         {
           $one = $attributes[$field_id];
      //     firep("$field_id - true - $one");
           $element[$field_id] = smartdocs_wsdl_request_data($field_id, $field_info['type'], @$field_info['description'], $attributes[$field_id], $datatypes, @$field_info['required']);
         }
-      elseif($field_id == "timeStamp")
+      else*/if($field_id == "timeStamp")
         {
           $dt = new DateTime();
           $dt->setTimeZone(new DateTimeZone('UTC'));
@@ -621,7 +619,7 @@ function smartdocs_wsdl_request_data($label, $type, $description, $data, $dataty
         }
       else
         {
-          $two = $attributes[$field_id];
+          // $two = $attributes[$field_id];
         //  firep("$field_id - false - $two ");
           $element[$field_id] = smartdocs_wsdl_request_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes, @$field_info['required']);
         }

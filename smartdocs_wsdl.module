@@ -142,7 +142,6 @@ function smartdocs_wsdl_import() {
   }
   else {
     $wsdl = file_get_contents('php://input');
-    //watchdog('smartdocs_wsdl', print_r($wsdl, 1));
     $DOMDocument = new DOMDocument();
     $loaded = $DOMDocument->loadXML($wsdl);
     if (!$loaded) {

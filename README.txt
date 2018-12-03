@@ -7,7 +7,9 @@ SmartDocs version for SOAP which converts operations from the WSDL to nodes.
 Usage
 -----
  
-*Create nodes from Operations in a WSDL and send test requests on the nodes.
+*This module creates nodes from Operations in a WSDL and allows sending of SOAP requests for those operations.
+
+*Ensure SOAP is installed on your server.
 
 *Enable Required modules
   smartdocs_wsdl

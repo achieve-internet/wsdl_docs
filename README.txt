@@ -10,7 +10,6 @@ Usage
 *Create nodes from Operations in a WSDL and send test requests on the nodes.
 
 *Enable Required modules
-  smartdocs_wsdl
   wsclient
   wsclient_soap
   entityreference

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * smartdocs_wsdl_features.views_default.inc
@@ -58,6 +59,12 @@ function smartdocs_wsdl_features_views_default_views() {
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
   $handler->display->display_options['path'] = 'soap_apis';
+  $handler->display->display_options['menu']['type'] = 'normal';
+  $handler->display->display_options['menu']['title'] = 'SOAP APIs';
+  $handler->display->display_options['menu']['weight'] = '3';
+  $handler->display->display_options['menu']['name'] = 'main-menu';
+  $handler->display->display_options['menu']['context'] = 0;
+  $handler->display->display_options['menu']['context_only_inline'] = 0;
   $export['api_reference'] = $view;
 
   $view = new view();
@@ -114,7 +121,7 @@ function smartdocs_wsdl_features_views_default_views() {
   $handler->display->display_options['sorts']['title']['id'] = 'title';
   $handler->display->display_options['sorts']['title']['table'] = 'node';
   $handler->display->display_options['sorts']['title']['field'] = 'title';
-  /* Contextual filter: Content: Service ref (field_service_ref) */
+  /* Contextual filter: Content: API Name (field_service_ref) */
   $handler->display->display_options['arguments']['field_service_ref_target_id']['id'] = 'field_service_ref_target_id';
   $handler->display->display_options['arguments']['field_service_ref_target_id']['table'] = 'field_data_field_service_ref';
   $handler->display->display_options['arguments']['field_service_ref_target_id']['field'] = 'field_service_ref_target_id';

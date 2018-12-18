@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * smartdocs_wsdl_features.features.field_instance.inc
@@ -120,57 +121,17 @@ function smartdocs_wsdl_features_field_default_field_instances() {
     'label' => 'output',
     'required' => 0,
     'settings' => array(
-      'text_processing' => 0,
+      'text_processing' => 1,
       'user_register_form' => FALSE,
     ),
     'widget' => array(
       'active' => 1,
       'module' => 'text',
       'settings' => array(
-        'rows' => 1,
+        'rows' => 5,
       ),
       'type' => 'text_textarea',
       'weight' => 37,
-    ),
-  );
-
-  // Exported field_instance: 'node-operations-field_parameters'.
-  $field_instances['node-operations-field_parameters'] = array(
-    'bundle' => 'operations',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'text',
-        'settings' => array(),
-        'type' => 'text_default',
-        'weight' => 2,
-      ),
-      'teaser' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 0,
-      ),
-    ),
-    'entity_type' => 'node',
-    'field_name' => 'field_parameters',
-    'label' => 'Parameters',
-    'required' => 0,
-    'settings' => array(
-      'text_processing' => 0,
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'text',
-      'settings' => array(
-        'size' => 60,
-      ),
-      'type' => 'text_textfield',
-      'weight' => 33,
     ),
   );
 
@@ -200,7 +161,7 @@ function smartdocs_wsdl_features_field_default_field_instances() {
     ),
     'entity_type' => 'node',
     'field_name' => 'field_service_ref',
-    'label' => 'Service ref',
+    'label' => 'API Name',
     'required' => 0,
     'settings' => array(
       'user_register_form' => FALSE,
@@ -208,11 +169,7 @@ function smartdocs_wsdl_features_field_default_field_instances() {
     'widget' => array(
       'active' => 1,
       'module' => 'options',
-      'settings' => array(
-        'match_operator' => 'CONTAINS',
-        'path' => '',
-        'size' => 60,
-      ),
+      'settings' => array(),
       'type' => 'options_select',
       'weight' => 32,
     ),
@@ -257,10 +214,9 @@ function smartdocs_wsdl_features_field_default_field_instances() {
 
   // Translatables
   // Included for use with string extractors like potx.
+  t('API Name');
   t('Body');
   t('Documentation');
-  t('Parameters');
-  t('Service ref');
   t('output');
   t('style');
 

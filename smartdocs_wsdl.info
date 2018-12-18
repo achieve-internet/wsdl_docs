@@ -5,4 +5,5 @@ package = Services
 dependencies[] = "wsclient_ui"
 dependencies[] = "wsclient_soap"
 dependencies[] = "entityreference"
+dependencies[] = "pathauto"
 version = "7.x-1.x-dev"

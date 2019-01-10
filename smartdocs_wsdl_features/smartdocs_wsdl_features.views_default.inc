@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * smartdocs_wsdl_features.views_default.inc
@@ -105,12 +104,12 @@ function smartdocs_wsdl_features_views_default_views() {
   $handler->display->display_options['empty']['area_text_custom']['table'] = 'views';
   $handler->display->display_options['empty']['area_text_custom']['field'] = 'area_text_custom';
   $handler->display->display_options['empty']['area_text_custom']['empty'] = TRUE;
-  $handler->display->display_options['empty']['area_text_custom']['content'] = 'No operations.';
+  $handler->display->display_options['empty']['area_text_custom']['content'] = 'No related APIs.';
   /* Field: Content: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'node';
   $handler->display->display_options['fields']['title']['field'] = 'title';
-  $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['label'] = 'Operation';
   $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
   $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
   /* Field: Content: Documentation */
@@ -125,9 +124,9 @@ function smartdocs_wsdl_features_views_default_views() {
   $handler->display->display_options['arguments']['field_service_ref_target_id']['id'] = 'field_service_ref_target_id';
   $handler->display->display_options['arguments']['field_service_ref_target_id']['table'] = 'field_data_field_service_ref';
   $handler->display->display_options['arguments']['field_service_ref_target_id']['field'] = 'field_service_ref_target_id';
-  $handler->display->display_options['arguments']['field_service_ref_target_id']['default_action'] = 'not found';
+  $handler->display->display_options['arguments']['field_service_ref_target_id']['default_action'] = 'default';
   $handler->display->display_options['arguments']['field_service_ref_target_id']['exception']['title'] = 'all';
-  $handler->display->display_options['arguments']['field_service_ref_target_id']['default_argument_type'] = 'fixed';
+  $handler->display->display_options['arguments']['field_service_ref_target_id']['default_argument_type'] = 'node';
   $handler->display->display_options['arguments']['field_service_ref_target_id']['summary']['number_of_records'] = '0';
   $handler->display->display_options['arguments']['field_service_ref_target_id']['summary']['format'] = 'default_summary';
   $handler->display->display_options['arguments']['field_service_ref_target_id']['summary_options']['items_per_page'] = '25';
@@ -148,7 +147,54 @@ function smartdocs_wsdl_features_views_default_views() {
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
+  $handler->display->display_options['defaults']['arguments'] = FALSE;
+  /* Contextual filter: Content: API Name (field_service_ref) */
+  $handler->display->display_options['arguments']['field_service_ref_target_id']['id'] = 'field_service_ref_target_id';
+  $handler->display->display_options['arguments']['field_service_ref_target_id']['table'] = 'field_data_field_service_ref';
+  $handler->display->display_options['arguments']['field_service_ref_target_id']['field'] = 'field_service_ref_target_id';
+  $handler->display->display_options['arguments']['field_service_ref_target_id']['default_action'] = 'not found';
+  $handler->display->display_options['arguments']['field_service_ref_target_id']['exception']['title'] = 'all';
+  $handler->display->display_options['arguments']['field_service_ref_target_id']['default_argument_type'] = 'node';
+  $handler->display->display_options['arguments']['field_service_ref_target_id']['summary']['number_of_records'] = '0';
+  $handler->display->display_options['arguments']['field_service_ref_target_id']['summary']['format'] = 'default_summary';
+  $handler->display->display_options['arguments']['field_service_ref_target_id']['summary_options']['items_per_page'] = '25';
   $handler->display->display_options['path'] = 'soap_apis/%';
+
+  /* Display: Block */
+  $handler = $view->new_display('block', 'Block', 'api_explorer');
+  $handler->display->display_options['defaults']['title'] = FALSE;
+  $handler->display->display_options['title'] = 'Related APIs';
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'node';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+  $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+  /* Field: Content: Nid */
+  $handler->display->display_options['fields']['nid']['id'] = 'nid';
+  $handler->display->display_options['fields']['nid']['table'] = 'node';
+  $handler->display->display_options['fields']['nid']['field'] = 'nid';
+  $handler->display->display_options['fields']['nid']['exclude'] = TRUE;
+  $handler->display->display_options['defaults']['arguments'] = FALSE;
+  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  /* Filter criterion: Content: Published */
+  $handler->display->display_options['filters']['status']['id'] = 'status';
+  $handler->display->display_options['filters']['status']['table'] = 'node';
+  $handler->display->display_options['filters']['status']['field'] = 'status';
+  $handler->display->display_options['filters']['status']['value'] = 1;
+  $handler->display->display_options['filters']['status']['group'] = 1;
+  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+  /* Filter criterion: Content: Type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'node';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['value'] = array(
+    'operations' => 'operations',
+  );
   $export['operations'] = $view;
 
   return $export;

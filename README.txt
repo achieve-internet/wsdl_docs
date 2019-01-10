@@ -1,5 +1,5 @@
 =========================
-SmartDocs WSDL
+WSDL Docs
 =========================
 
 SmartDocs version for SOAP which converts operations from the WSDL to nodes.
@@ -12,25 +12,25 @@ USAGE
 *Ensure SOAP is installed on your server.
 
 *Enable Required modules
-  smartdocs_wsdl
+  wsdl_docs
   wsclient
   wsclient_soap
   entityreference
   pathauto (If you want SEO friendly URLs on operation nodes)
 
 *Enable Features
-  smartdocs_wsdl_features
+  wsdl_docs_features
 
 *Import
   Import WSDL
-  /admin/content/smartdocs_wsdl/add
+  /admin/content/wsdl_docs/add
 
   *View created operation nodes
     /admin/content
 
 *Update
   Update existing service
-  Click edit on admin/content/smartdocs_wsdl for the service you want to update the operations on. 
+  Click edit on admin/content/wsdl_docs for the service you want to update the operations on.
   Click save. 
 
   *View updated operations (see updated timestamp on node)
@@ -49,7 +49,7 @@ USAGE
 
 *REST Endpoint Import
   Configure HTTP basic auth credentials
-  /admin/content/smartdocs_wsdl/basic_auth
+  /admin/content/wsdl_docs/basic_auth
 
   *Import from URL: This example will use Advanced REST Client to send the POST request to our REST endpoint.
 
@@ -57,18 +57,18 @@ USAGE
   http://www.thomas-bayer.com/axis2/services/BLZService?wsdlde (this only has one operation so is good to use but can use any of the samples above).
 
   *Post to this url
-    /smartdocs_wsdl_import
+    /wsdl_docs_import
     Add parameters.
     url: The web address of the WSDL.
     name: The human readable label of the webservice that appears at /soap_apis.
 
-  *View the created service at admin/content/smartdocs_wsdl.
+  *View the created service at admin/content/wsdl_docs.
 
   *View created nodes
    /admin/content
 
 *File Upload to Endpoint
-  *This module has the ability to import via /smartdocs_wsdl_import from a binary file upload, to test with ARC.
+  *This module has the ability to import via /wsdl_docs_import from a binary file upload, to test with ARC.
 
   *Add parameter 'name'.
 
@@ -82,7 +82,7 @@ USAGE
     If service does not exist you will see “CREATE {ID} SERVICE” and it will create the service.
     If it exists you will see “UPDATE {ID} SERVICE” and it will update the nodes associated with the service.
 
-  *View the created or updated service at admin/content/smartdocs_wsdl.
+  *View the created or updated service at admin/content/wsdl_docs.
 
   *View created or updated nodes
    /admin/content
@@ -110,4 +110,4 @@ should be able to expose it.
 HISTORY
 -------
 
-This module started as a request for a standalone form to test web services before digging into rules http://drupal.org/node/1812504 -> https://www.drupal.org/node/1929778 it then became absorbed into WSClient https://www.drupal.org/project/wsclient. Later on it was customized to focus on testing SOAP webservices https://github.com/apickelsimer/soap_client_portal it's latest iteration is SmartDocs_WSDL; Smartdocs for SOAP webservices. We hope to refactor it in the future and add improvements to make it on par with SmartDocs.
+This module started as a request for a standalone form to test web services before digging into rules http://drupal.org/node/1812504 -> https://www.drupal.org/node/1929778 it then became absorbed into WSClient https://www.drupal.org/project/wsclient. Later on it was customized to focus on testing SOAP webservices https://github.com/apickelsimer/soap_client_portal it's latest iteration is wsdl_smartdocs; Smartdocs for SOAP webservices. We hope to refactor it in the future and add improvements to make it on par with SmartDocs.

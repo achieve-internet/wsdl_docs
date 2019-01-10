@@ -3,7 +3,7 @@
 
   Drupal.behaviors.showTabs = {
     attach: function (context, settings) {
-      $("#" + Drupal.settings.smartdocs_wsdl.element_id).tabs();
+      $("#" + Drupal.settings.wsdl_docs.element_id).tabs();
     }
   };
 

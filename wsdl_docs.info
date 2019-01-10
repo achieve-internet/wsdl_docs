@@ -1,4 +1,4 @@
-name = "SmartDocs WSDL"
+name = "WSDL Docs"
 description = "SmartDocs functionality for WSDL files."
 core = "7.x"
 package = Services

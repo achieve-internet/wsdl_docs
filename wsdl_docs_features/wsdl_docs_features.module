@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the WSDL Docs Features feature.
+ */
+
+include_once 'wsdl_docs_features.features.inc';

@@ -2,13 +2,13 @@
 
 /**
  * @file
- * smartdocs_wsdl_features.features.field_base.inc
+ * wsdl_docs_features.features.field_base.inc
  */
 
 /**
  * Implements hook_field_default_field_bases().
  */
-function smartdocs_wsdl_features_field_default_field_bases() {
+function wsdl_docs_features_field_default_field_bases() {
   $field_bases = array();
 
   // Exported field_base: 'body'.

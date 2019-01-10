@@ -784,3 +784,33 @@ function wsdl_docs_pathauto($op) {
 function wsdl_docs_pathauto_bulkupdate() {
 
 }
+
+/**
+ * Implements hook_views_pre_view().
+ *
+ * For the Related APIs block displayed on a given operations node,
+ * get the service from the path and filter this list of related operations.
+ */
+function smartdocs_wsdl_views_pre_view(&$view, &$display_id, &$args) {
+  if (($view->name == 'operations') && ($display_id == 'api_explorer')) {
+    // Get referenced service.
+    $node = menu_get_object();
+    $node_wrapper = entity_metadata_wrapper('node', $node->nid);
+    $referenced_service = $node_wrapper->field_service_ref->value();
+    // Add service id as a filter to view.
+    $filters = $view->display_handler->get_option('filters');
+    if (empty($filters['field_service_ref_target_id'])) {
+      $view->add_item(
+        $display_id,
+        'filter',
+        'field_data_field_service_ref',
+        'field_service_ref_target_id',
+        array(
+          'operator' => '=',
+          'value' => ['value' => $referenced_service->id],
+          'group' => 1
+        )
+      );
+    }
+  }
+}

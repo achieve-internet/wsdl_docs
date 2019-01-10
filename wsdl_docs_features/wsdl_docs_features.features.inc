@@ -7,7 +7,7 @@
 /**
  * Implements hook_ctools_plugin_api().
  */
-function wsdl_docs_features_ctools_plugin_api($module = NULL, $api = NULL) {
+function smartdocs_wsdl_features_ctools_plugin_api($module = NULL, $api = NULL) {
   if ($module == "context" && $api == "context") {
     return array("version" => "3");
   }

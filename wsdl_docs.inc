@@ -27,7 +27,7 @@ function wsdl_docs_operation_invoke($form, $form_state, $service, $operation) {
     '#value' => t("Enter the parameters to the !operation_label service here. It's up to you to get the data types right. No type validation is done at this end, as it's a debugger to let you throw various errors at the web service and see how it responds.", $strings),
   );
 
-  // Custom css for form parameters.
+  //Custom css for form parameters.
   $form['parameters']['#attached']['css'][] = drupal_get_path('module', 'wsdl_docs') . '/ui/ui.css';
 
   // Deal with complex types.
@@ -50,7 +50,7 @@ function wsdl_docs_operation_invoke($form, $form_state, $service, $operation) {
     ),
   );
 
-  // Add some markup here.
+  //Add some markup here.
   $form['spacer'] = array(
     '#markup' => '<br/><br/>',
   );
@@ -64,7 +64,7 @@ function wsdl_docs_operation_invoke($form, $form_state, $service, $operation) {
     '#attributes' => array('id' => $element_id),
   );
 
-  // Add tabs.
+  // Add tabs
   $form['transaction']['#attached']['library'][] = array('system', 'ui.tabs');
   $form['transaction']['#attached']['js'][] = array(
     'data' => drupal_get_path('module', 'wsdl_docs') . '/wsdl_docs.js',
@@ -120,7 +120,7 @@ function wsdl_docs_operation_invoke($form, $form_state, $service, $operation) {
 
   $form['transaction']['response']['data'] = array();
 
-    // Add some markup here.
+    //add some markup here
   $form['resp_spacer'] = array(
   '#markup' => '<br/><br/>',
   );
@@ -129,23 +129,23 @@ function wsdl_docs_operation_invoke($form, $form_state, $service, $operation) {
 }
 
 /**
- * FAPI form used to display all services that are managed.
+ * FAPI form used to display all services that are managed
  */
 function wsdl_docs_services_viewer($form, $form_state) {
   drupal_set_title(t("Web Services"));
 
-    // @todo: Find and list all published services
+    //to-do: Find and list all published services
     return $form;
 }
 
 /**
- * Get ref no by calling api.
- */
-function get_reference_number($form, $form_state) {
-  /*  replacing 'referenceNumberRequest' with $ref_Num_Request - Gurpreet
+* get ref no by calling api
+*/
+function get_reference_number($form, $form_state){
+  /*  replacing 'referenceNumberRequest' with $ref_Num_Request - Gurpreet 
   return $form['parameters']['referenceNumberRequest']['referenceNumber'];
   */
-
+  
   $ref_Num_Request = $_SESSION['acoperations']['operations']['request'];
   return $form['parameters'][$ref_Num_Request]['referenceNumber'];
 }
@@ -179,10 +179,10 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
   // Ready to actually invoke the call
   $timer_before = microtime();
   try {
-    if ($operation['name']) {
-      $response = $service->invoke($operation['name'], $args);
-    }
-    elseif ($operation['label']) {
+    if($operation['name']){
+    $response = $service->invoke($operation['name'], $args);
+  }
+    elseif($operation['label']){
       $response = $service->invoke($operation['label'], $args);
     }
   }
@@ -191,6 +191,7 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
     drupal_set_message("<pre>Catch Exception - " . $e->getMessage() . "</pre>");
   }
   $timer_duration = $timer_before - microtime();
+
   $element = $form['transaction'];
   
   // Place the trace data into the display.
@@ -208,7 +209,7 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
     $element['response']['packet']['#markup'] = $service->endpoint()->client()->lastResponse->body;
   }
   elseif ($service->type == 'soap') {
-    $element['request']['header']['#markup'] = $service->endpoint()->client()->__getLastRequestHeaders();
+	  $element['request']['header']['#markup'] = $service->endpoint()->client()->__getLastRequestHeaders();
     $element['request']['packet']['#markup'] = htmlspecialchars(wsdl_docs_prettify_xml($service->endpoint()->client()->__getLastRequest()));
     $_SESSION['lastRequest'] = $service->endpoint()->client()->__getLastRequest();
 
@@ -268,8 +269,7 @@ function wsdl_docs_soapclient_ui_property_row_new($name) {
  *
  * This recurses through complex types until it hits core types.
  *
- * @return array
- *  FAPI form fragment.
+ * @return a FAPI form fragment.
  */
 function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, $required) {
   if (isset($datatypes[$type])) {
@@ -284,15 +284,17 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
     foreach ($datatype['property info'] as $field_id => $field_info) {
       // Recurse and get each bit to render its own input element.
       //pre-populate fields with developer data
-      if ($field_id == "timeStamp") {
-        $dt = new DateTime();
-        $dt->setTimeZone(new DateTimeZone('UTC'));
-        $timeStamp = $dt->format('c');
-        $element[$field_id] = wsdl_docs_request_data($field_id, $field_info['type'], @$field_info['description'], $timeStamp, $datatypes, @$field_info['required']);
-      }
-      else {
-        $element[$field_id] = wsdl_docs_request_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes, @$field_info['required']);
-      }
+	  if($field_id == "timeStamp")
+        {
+          $dt = new DateTime();
+          $dt->setTimeZone(new DateTimeZone('UTC'));
+          $timeStamp = $dt->format('c');
+          $element[$field_id] = wsdl_docs_request_data($field_id, $field_info['type'], @$field_info['description'], $timeStamp, $datatypes, @$field_info['required']);
+        }
+      else
+        {
+          $element[$field_id] = wsdl_docs_request_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes, @$field_info['required']);
+        }
     }
     return $element;
   }
@@ -323,8 +325,10 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
     );
   }
   elseif ($type == 'boolean') {
-    if (isset($required)) {
-      if ($required == 'true') {
+
+    if (isset($required)){
+      if ($required == 'true')
+      {
         return array(
           '#type' => 'select',
           '#title' => t("Property: %label", array('%label' => $label)),
@@ -335,7 +339,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
           '#required' => TRUE,
         );
       }
-      elseif ($required == 'not allowed') {
+      else if ($required == 'not allowed') {
         return array(
           '#type' => 'select',
           '#title' => t("Property: %label", array('%label' => $label)),
@@ -344,6 +348,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
           '#required' => FALSE,
           '#disabled' => TRUE,
+          '#value' => NULL,
         );
       }
       else{
@@ -360,7 +365,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       }
     }
     else{
-      // Set to optional.
+      //set to optional
     return array(
       '#type' => 'select',
       '#title' => t("Property: %label", array('%label' => $label)),
@@ -373,10 +378,11 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
 
   }
   else {
-    // A textfield will normally do for any other primitives.
-    if (isset ($required)){
-      if ($required == 'true') {
-        return array(
+    // A textfield will normally do for any other primitives. 
+    if (isset($required)){
+      if ($required == 'true')
+      {
+         return array(
           '#type' => 'textfield',
           '#title' => t("Property: %label", array('%label' => $label)),
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
@@ -385,35 +391,35 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
           '#size' => 20
         );
       }
-      elseif ($required == 'not allowed') {
-        //set to optional
-        return array(
-          '#type' => 'textfield',
-          '#title' => t("Property: %label", array('%label' => $label)),
+      else if ($required == 'not allowed') {
+      //set to optional
+       return array(
+        '#type' => 'textfield',
+        '#title' => t("Property: %label", array('%label' => $label)),
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
-          '#required' => FALSE,
-          '#disabled' => TRUE,
-          '#default_value' => NULL,
-          '#value' => NULL,
-          '#size' => 20
-        );
+        '#required' => FALSE,
+        '#disabled' => TRUE,
+        '#default_value' => NULL,
+        '#value' => NULL,
+        '#size' => 20
+      );
       }
-      else {
+      else{
       //required is set to a value other than true or not allowed so field is optional
-        return array(
-          '#type' => 'textfield',
-          '#title' => t("Property: %label", array('%label' => $label)),
+       return array(
+        '#type' => 'textfield',
+        '#title' => t("Property: %label", array('%label' => $label)),
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
-          '#required' => FALSE,
-          '#default_value' => $data,
-          //'#value' => NULL, //is_null('#value') ? '#value' : NULL,
-          '#size' => 20
-        );
+        '#required' => FALSE,
+        '#default_value' => $data,
+        //'#value' => NULL, //is_null('#value') ? '#value' : NULL,
+        '#size' => 20
+      );
       }
     }
     else{
       //required parameter not set so field is optional
-      return array(
+       return array(
         '#type' => 'textfield',
         '#title' => t("Property: %label", array('%label' => $label)),
         '#description' => t("Type: %type <br> Description: %description <br> Required: (Not Set)", array('%label' => $label, '%type' => $type, '%description' => $description)),
@@ -432,8 +438,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
  *
  * This recurses through complex types until it hits core types.
  *
- * @return array
- *  FAPI form fragment.
+ * @return a FAPI form fragment.
  */
 function wsdl_docs_response_data($label, $type, $description, $data, $datatypes) {
   if (isset($datatypes[$type])) {
@@ -475,32 +480,27 @@ function wsdl_docs_response_data($label, $type, $description, $data, $datatypes)
     );
   }
   elseif ($type == 'boolean') {
-    //set to optional
-    return array(
-      '#markup' => t("<b>Property: %label</b> <br>Type: %type <br>Description: %description<br>", array('%label' => $label, '%type' => $type, '%description' => $description)),
-    );
+      //set to optional
+        return array(
+        '#markup' => t("<b>Property: %label</b> <br>Type: %type <br>Description: %description<br>", array('%label' => $label, '%type' => $type, '%description' => $description)),
+        );
   }
   else {
-    // A textfield will normally do for any other primitives.
-    return array(
-      '#markup' => t("<b>Property: %label</b> <br>Type: %type <br>Description: %description<br>", array('%label' => $label, '%type' => $type, '%description' => $description)),
-    );
+    // A textfield will normally do for any other primitives. 
+       return array(
+        '#markup' => t("<b>Property: %label</b> <br>Type: %type <br>Description: %description<br>", array('%label' => $label, '%type' => $type, '%description' => $description)),
+      );
   }
 }
 
-/**
- * @param $title
- * @param $node_type
- * @return bool|mixed
- */
 function wsdl_docs_node_load_by_title($title, $node_type) {
-  $query = new EntityFieldQuery();
-  $entities = $query->entityCondition('entity_type', 'node')
-      ->propertyCondition('type', $node_type)
-      ->propertyCondition('title', $title)
-      ->range(0, 1)
-      ->execute();
-  if (!empty($entities)) {
-    return node_load(array_shift(array_keys($entities['node'])));
-  }
+    $query = new EntityFieldQuery();
+    $entities = $query->entityCondition('entity_type', 'node')
+        ->propertyCondition('type', $node_type)
+        ->propertyCondition('title', $title)
+        ->range(0,1)
+        ->execute();
+    if(!empty($entities)) {
+        return node_load(array_shift(array_keys($entities['node'])));
+    }
 }

@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * smartdocs_wsdl_features.features.inc

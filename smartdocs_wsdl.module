@@ -519,8 +519,8 @@ function smartdocs_wsdl_wsclient_ui_element_url_validate($element, &$form_state)
 }
 
 /**
- * Submit callback for the web service form to populate operations and data
- * types of the new SOAP service.
+ * Submit callback for the web service form to populate operations and data types
+ * of the new SOAP service.
  */
 function smartdocs_wsdl_wsclient_service_form_submit($form, &$form_state) {
   if ($form_state['values']['type'] == 'soap' && ($form_state['op'] == 'add' || $form_state['op'] == 'edit')) {
@@ -530,16 +530,16 @@ function smartdocs_wsdl_wsclient_service_form_submit($form, &$form_state) {
     // Create or update operations.
     smartdocs_wsdl_update_wsclient_service($service);
 	if(module_exists('pathauto')) {
-	  // Create path alias  for wsdl service
+	  // Create path alias for the WSDL service.
 	  $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
 	  if(!$path) {
-		global $language;
-		watchdog('smartdocs_wsdl', '<pre>' . print_r($service, 1) . '</pre>');
 		module_load_include('inc', 'pathauto');
-		pathauto_create_alias('smartdocs_wsdl', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'smartdocs_wsdl', $language->language);
+		$p = pathauto_create_alias('smartdocs_wsdl', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'smartdocs_wsdl', $language = LANGUAGE_NONE);
+		watchdog('smartdocs_wsdl', '<pre>' . print_r($p, 1) . '</pre>');
+
 	  }
 	}
-    // Add redirect to our list.
+    // Add redirect to the list of services.
     if ($form['#action'] == '/admin/content/smartdocs_wsdl/add') {
       $form_state['redirect'] = 'admin/content/smartdocs_wsdl';
     }
@@ -763,18 +763,24 @@ function smartdocs_wsdl_tokens($type, $tokens, array $data = array(), array $opt
 }
 
 /**
- * Implements hook_pathauto.
+ * Implements hook_pathauto().
  */
 function smartdocs_wsdl_pathauto($op) {
-  $settings = new stdClass();
-  $settings->module = 'smartdocs_wsdl';
-  $settings->groupheader = t('Wsdl service paths');
-  $settings->patterndescr = t('Default path pattern');
-  $settings->patterndefault = 'soap_apis/[smartdocs_wsdl:title]';
-  $settings->token_type = 'smartdocs_wsdl';
-  $settings->patternitems = array('wsdl' => 'Smartdocs wsdl');
-  $settings->batch_update_callback = 'smartdocs_wsdl_pathauto_bulkupdate';
-  return $settings;
+  switch ($op) {
+    case 'settings':
+      $settings = new stdClass();
+      $settings->module = 'smartdocs_wsdl';
+      $settings->groupheader = t('Wsdl service paths');
+      $settings->patterndescr = t('Default path pattern');
+      $settings->patterndefault = 'soap_apis/[smartdocs_wsdl:title]';
+      $settings->token_type = 'smartdocs_wsdl';
+      $settings->patternitems = array('wsdl' => 'Smartdocs wsdl');
+      $settings->batch_update_callback = 'smartdocs_wsdl_pathauto_bulkupdate';
+      return $settings;
+
+    default:
+      break;
+  }
 }
 
 /**

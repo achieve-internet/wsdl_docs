@@ -1,3 +1,8 @@
+/**
+ * @file
+ * Custom js for WSDL docs module.
+ */
+
 (function ($) {
   'use strict';
 

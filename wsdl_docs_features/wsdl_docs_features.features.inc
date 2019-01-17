@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * wsdl_docs_features.features.inc

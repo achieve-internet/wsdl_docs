@@ -7,7 +7,7 @@
 /**
  * Add the description field in the entity.
  */
-function smartdocs_wsdl_schema_alter(&$schema) {
+function wsdl_docs_schema_alter(&$schema) {
   $schema['wsclient_service']['fields']['description'] = array(
     'description' => 'The description of the service.',
     'type' => 'varchar',
@@ -26,7 +26,7 @@ function smartdocs_wsdl_schema_alter(&$schema) {
   );
 }
 
-function smartdocs_wsdl_install() {
+function wsdl_docs_install() {
   db_add_field('wsclient_service', 'description', array(
     'description' => 'The description of the service.',
     'type' => 'varchar',
@@ -47,7 +47,7 @@ function smartdocs_wsdl_install() {
   variable_set('pathauto_node_operations_pattern', 'soap_apis/[node:field-service-ref:label]/[node:title]');
 }
 
-function smartdocs_wsdl_uninstall() {
+function wsdl_docs_uninstall() {
   db_drop_field('wsclient_service', 'description');
   db_drop_field('wsclient_service', 'uid');
   db_drop_field('wsclient_service', 'created');

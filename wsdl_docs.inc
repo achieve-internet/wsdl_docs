@@ -8,7 +8,7 @@
  * FAPI form used to display the options and the results of calling a web
  * service.
  */
-function smartdocs_wsdl_operation_invoke($form, $form_state, $service, $operation) {
+function wsdl_docs_operation_invoke($form, $form_state, $service, $operation) {
   $strings = array(
     '!service_label' => $service->label,
     '!operation_label' => $operation['label'],
@@ -28,14 +28,14 @@ function smartdocs_wsdl_operation_invoke($form, $form_state, $service, $operatio
   );
 
   //Custom css for form parameters.
-  $form['parameters']['#attached']['css'][] = drupal_get_path('module', 'smartdocs_wsdl') . '/ui/ui.css'; 
+  $form['parameters']['#attached']['css'][] = drupal_get_path('module', 'wsdl_docs') . '/ui/ui.css';
 
   // Deal with complex types.
   // Each complex type may require its own mini-form for data entry,
   // and these may be nested.
   $datatypes = $service->datatypes;
   foreach ($operation['parameter'] as $param => $info) {
-    $form['parameters'][$param] = smartdocs_wsdl_request_data($param, $info['type'], @$info['description'], @$form_state['values']['parameters'], $datatypes, @$info['required']);
+    $form['parameters'][$param] = wsdl_docs_request_data($param, $info['type'], @$info['description'], @$form_state['values']['parameters'], $datatypes, @$info['required']);
   }
 
   $form['execute'] = array(
@@ -43,7 +43,7 @@ function smartdocs_wsdl_operation_invoke($form, $form_state, $service, $operatio
     '#value' => 'Execute Request',
     '#ajax' => array(
       'event' => 'click',
-      'callback' => 'smartdocs_wsdl_prepare_request_callback',
+      'callback' => 'wsdl_docs_prepare_request_callback',
       'wrapper' => 'edit-transaction',
       'method' => 'replace',
       'effect' => 'fade',
@@ -67,11 +67,11 @@ function smartdocs_wsdl_operation_invoke($form, $form_state, $service, $operatio
   // Add tabs
   $form['transaction']['#attached']['library'][] = array('system', 'ui.tabs');
   $form['transaction']['#attached']['js'][] = array(
-    'data' => drupal_get_path('module', 'smartdocs_wsdl') . '/smartdocs_wsdl.js',
+    'data' => drupal_get_path('module', 'wsdl_docs') . '/wsdl_docs.js',
     'type' => 'file',
   );
   $form['transaction']['#attached']['js'][] = array(
-    'data' => array('smartdocs_wsdl' => array('element_id' => $element_id)),
+    'data' => array('wsdl_docs' => array('element_id' => $element_id)),
     'type' => 'setting',
   );
 
@@ -131,7 +131,7 @@ function smartdocs_wsdl_operation_invoke($form, $form_state, $service, $operatio
 /**
  * FAPI form used to display all services that are managed
  */
-function smartdocs_wsdl_services_viewer($form, $form_state) {
+function wsdl_docs_services_viewer($form, $form_state) {
   drupal_set_title(t("Web Services"));
 
     //to-do: Find and list all published services
@@ -152,7 +152,7 @@ function get_reference_number($form, $form_state){
 /**
  * Callback for the test from 'prepare' button.
  */
-function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
+function wsdl_docs_prepare_request_callback($form, $form_state) {
  // firep($form_state);
   $service = $form_state['build_info']['args'][0];
   $operation = $form_state['build_info']['args'][1];
@@ -210,11 +210,11 @@ function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
   }
   elseif ($service->type == 'soap') {
 	  $element['request']['header']['#markup'] = $service->endpoint()->client()->__getLastRequestHeaders();
-    $element['request']['packet']['#markup'] = htmlspecialchars(smartdocs_wsdl_prettify_xml($service->endpoint()->client()->__getLastRequest()));
+    $element['request']['packet']['#markup'] = htmlspecialchars(wsdl_docs_prettify_xml($service->endpoint()->client()->__getLastRequest()));
     $_SESSION['lastRequest'] = $service->endpoint()->client()->__getLastRequest();
 
     $element['response']['header']['#markup'] = $service->endpoint()->client()->__getLastResponseHeaders();
-    $element['response']['packet']['#markup'] = htmlspecialchars(smartdocs_wsdl_prettify_xml($service->endpoint()->client()->__getLastResponse()));
+    $element['response']['packet']['#markup'] = htmlspecialchars(wsdl_docs_prettify_xml($service->endpoint()->client()->__getLastResponse()));
     $_SESSION['lastResponse'] = $service->endpoint()->client()->__getLastResponse();
   }
 
@@ -229,7 +229,7 @@ function smartdocs_wsdl_prepare_request_callback($form, $form_state) {
 /**
  * Indent and format XML for display.
  */
-function smartdocs_wsdl_prettify_xml($xml) {
+function wsdl_docs_prettify_xml($xml) {
   $dom = new DOMDocument;
   $dom->preserveWhiteSpace = FALSE;
   $dom->loadXML($xml);
@@ -240,7 +240,7 @@ function smartdocs_wsdl_prettify_xml($xml) {
 /**
  * Generates a row in the properties table.
  */
-function smartdocs_wsdl_soapclient_ui_property_row($service, $types, $name = '', $info = array()) {
+function wsdl_docs_soapclient_ui_property_row($service, $types, $name = '', $info = array()) {
   $property['name'] = array(
     '#type' => 'textfield',
     '#disabled' => TRUE,
@@ -253,7 +253,7 @@ function smartdocs_wsdl_soapclient_ui_property_row($service, $types, $name = '',
 /**
  * Generates a row in the properties table.
  */
-function smartdocs_wsdl_soapclient_ui_property_row_new($name) {
+function wsdl_docs_soapclient_ui_property_row_new($name) {
   $property['name'] = array(
     '#type' => 'textfield',
     '#disabled' => TRUE,
@@ -271,7 +271,7 @@ function smartdocs_wsdl_soapclient_ui_property_row_new($name) {
  *
  * @return a FAPI form fragment.
  */
-function smartdocs_wsdl_request_data($label, $type, $description, $data, $datatypes, $required) {
+function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, $required) {
   if (isset($datatypes[$type])) {
     // Build a complex type.
     $datatype = $datatypes[$type];
@@ -289,11 +289,11 @@ function smartdocs_wsdl_request_data($label, $type, $description, $data, $dataty
           $dt = new DateTime();
           $dt->setTimeZone(new DateTimeZone('UTC'));
           $timeStamp = $dt->format('c');
-          $element[$field_id] = smartdocs_wsdl_request_data($field_id, $field_info['type'], @$field_info['description'], $timeStamp, $datatypes, @$field_info['required']);
+          $element[$field_id] = wsdl_docs_request_data($field_id, $field_info['type'], @$field_info['description'], $timeStamp, $datatypes, @$field_info['required']);
         }
       else
         {
-          $element[$field_id] = smartdocs_wsdl_request_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes, @$field_info['required']);
+          $element[$field_id] = wsdl_docs_request_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes, @$field_info['required']);
         }
     }
     return $element;
@@ -311,7 +311,7 @@ function smartdocs_wsdl_request_data($label, $type, $description, $data, $dataty
     );
     for ($field_id = 0; $field_id < 3; $field_id++) {
       // Recurse and get each bit to render its own input element
-      $element[$field_id] = smartdocs_wsdl_request_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes);
+      $element[$field_id] = wsdl_docs_request_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes);
       $element[$field_id]['#collapsed'] = TRUE;
     }
     return $element;
@@ -440,7 +440,7 @@ function smartdocs_wsdl_request_data($label, $type, $description, $data, $dataty
  *
  * @return a FAPI form fragment.
  */
-function smartdocs_wsdl_response_data($label, $type, $description, $data, $datatypes) {
+function wsdl_docs_response_data($label, $type, $description, $data, $datatypes) {
   if (isset($datatypes[$type])) {
     // Build a complex type.
     $datatype = $datatypes[$type];
@@ -452,7 +452,7 @@ function smartdocs_wsdl_response_data($label, $type, $description, $data, $datat
     );
     foreach ($datatype['property info'] as $field_id => $field_info) {
       // Recurse and get each bit to render its own input element.
-      $element[$field_id] = smartdocs_wsdl_response_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes);
+      $element[$field_id] = wsdl_docs_response_data($field_id, $field_info['type'], @$field_info['description'], $data[$field_id], $datatypes);
     }
     return $element;
   }
@@ -469,7 +469,7 @@ function smartdocs_wsdl_response_data($label, $type, $description, $data, $datat
     );
     for ($field_id = 0; $field_id < 3; $field_id++) {
       // Recurse and get each bit to render its own input element
-      $element[$field_id] = smartdocs_wsdl_response_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes);
+      $element[$field_id] = wsdl_docs_response_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes);
       $element[$field_id]['#collapsed'] = TRUE;
     }
     return $element;
@@ -493,7 +493,7 @@ function smartdocs_wsdl_response_data($label, $type, $description, $data, $datat
   }
 }
 
-function smartdocs_wsdl_node_load_by_title($title, $node_type) {
+function wsdl_docs_node_load_by_title($title, $node_type) {
     $query = new EntityFieldQuery();
     $entities = $query->entityCondition('entity_type', 'node')
         ->propertyCondition('type', $node_type)

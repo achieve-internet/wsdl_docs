@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * smartdocs_wsdl_features.features.inc
+ * wsdl_docs_features.features.inc
  */
 
 /**
@@ -16,17 +16,17 @@ function smartdocs_wsdl_features_ctools_plugin_api($module = NULL, $api = NULL) 
 /**
  * Implements hook_views_api().
  */
-function smartdocs_wsdl_features_views_api($module = NULL, $api = NULL) {
+function wsdl_docs_features_views_api($module = NULL, $api = NULL) {
   return array("api" => "3.0");
 }
 
 /**
  * Implements hook_node_info().
  */
-function smartdocs_wsdl_features_node_info() {
+function wsdl_docs_features_node_info() {
   $items = array(
     'operations' => array(
-      'name' => t('WSDL SmartDocs Operation'),
+      'name' => t('WSDL Docs Operation'),
       'base' => 'node_content',
       'description' => '',
       'has_title' => '1',

@@ -2,13 +2,13 @@
 
 /**
  * @file
- * smartdocs_wsdl_features.views_default.inc
+ * wsdl_docs_features.views_default.inc
  */
 
 /**
  * Implements hook_views_default_views().
  */
-function smartdocs_wsdl_features_views_default_views() {
+function wsdl_docs_features_views_default_views() {
   $export = array();
 
   $view = new view();

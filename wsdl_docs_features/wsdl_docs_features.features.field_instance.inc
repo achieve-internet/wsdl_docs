@@ -1,14 +1,13 @@
 <?php
-
 /**
  * @file
- * smartdocs_wsdl_features.features.field_instance.inc
+ * wsdl_docs_features.features.field_instance.inc
  */
 
 /**
  * Implements hook_field_default_field_instances().
  */
-function smartdocs_wsdl_features_field_default_field_instances() {
+function wsdl_docs_features_field_default_field_instances() {
   $field_instances = array();
 
   // Exported field_instance: 'node-operations-body'.

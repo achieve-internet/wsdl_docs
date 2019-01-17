@@ -592,14 +592,15 @@ function wsdl_docs_node_view($node, $view_mode, $langcode) {
       $operation = $node->field_service_ref['und'][0]['entity']->operations[$node->title];
       $form = drupal_get_form('wsdl_docs_operation_invoke', $service, $operation);
       $form['transaction']['#attributes']['class'][] = 'element-hidden';
-      // Add link to WSDL Viewer
+      // Add links to view WSDL.
       $link = '';
       if (substr($service->url, 0, 7) != 'private') {
         $url = 'https://services.w3.org/xslt?xslfile=http://tomi.vanek.sk/xml/wsdl-viewer.xsl&amp;xmlfile=' . $service->url;
-        $link = l('View in WSDL', $url);
+        $link = l('View WSDL', $url);
       }
+      $raw_wsdl_link = l('View raw WSDL XML', $service->url);
       $node->content['apiform'] = array(
-        '#markup' => $link . drupal_render($form),
+        '#markup' => '<span class="wsdl-viewer">' . $link . '</span><br><span class="wsdl-file">' . $raw_wsdl_link . '</span>' . drupal_render($form),
         '#weight' => 100,
       );
     }

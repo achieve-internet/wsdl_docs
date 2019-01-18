@@ -92,7 +92,7 @@ function wsdl_docs_import() {
     // Get service ID by service URL.
     $service_id = db_select('wsclient_service', 'ws')
       ->fields('ws', array('id'))
-      ->condition('ws.url', $_POST['url'])
+      ->condition('ws.url', check_plain($_POST['url']))
       ->execute()
       ->fetchField();
     // If service exists.
@@ -106,7 +106,7 @@ function wsdl_docs_import() {
     // If service does not exist.
     else {
       // Create new service.
-      $service = wsdl_docs_create_wsclient_service($_POST['url'], $_POST['name']);
+      $service = wsdl_docs_create_wsclient_service(check_plain($_POST['url']), check_plain($_POST['name']));
       // Create or update operations.
       wsdl_docs_update_wsclient_service($service);
       return 'CREATE ' . $service->id . ' SERVICE';

@@ -788,13 +788,6 @@ function wsdl_docs_pathauto($op) {
 }
 
 /**
- * Implements hook_pathauto_bulkupdate().
- */
-function wsdl_docs_pathauto_bulkupdate() {
-
-}
-
-/**
  * Implements hook_views_pre_view().
  *
  * For the Related APIs block displayed on a given operations node,

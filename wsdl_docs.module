@@ -537,15 +537,14 @@ function wsdl_docs_wsclient_service_form_submit($form, &$form_state) {
       // Create path alias for the WSDL service.
       $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
       if (!$path) {
-      module_load_include('inc', 'pathauto');
-      $p = pathauto_create_alias('smartdocs_wsdl', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'smartdocs_wsdl', $language = LANGUAGE_NONE);
-      watchdog('smartdocs_wsdl', '<pre>' . print_r($p, 1) . '</pre>');
-
+        module_load_include('inc', 'pathauto');
+        $p = pathauto_create_alias('wsdl_docs', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'wsdl_docs', LANGUAGE_NONE);
+        watchdog('wsdl_docs', '<pre>' . print_r($p, 1) . '</pre>');
       }
     }
     // Add redirect to the list of services.
-    if ($form['#action'] == '/admin/content/smartdocs_wsdl/add') {
-      $form_state['redirect'] = 'admin/content/smartdocs_wsdl';
+    if ($form['#action'] == '/admin/content/wsdl_docs/add') {
+      $form_state['redirect'] = 'admin/content/wsdl_docs';
     }
   }
 }

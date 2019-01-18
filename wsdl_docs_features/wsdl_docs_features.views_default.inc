@@ -116,6 +116,7 @@ function wsdl_docs_features_views_default_views() {
   $handler->display->display_options['fields']['field_documentation']['id'] = 'field_documentation';
   $handler->display->display_options['fields']['field_documentation']['table'] = 'field_data_field_documentation';
   $handler->display->display_options['fields']['field_documentation']['field'] = 'field_documentation';
+  $handler->display->display_options['fields']['field_documentation']['label'] = 'Description';
   /* Sort criterion: Content: Title */
   $handler->display->display_options['sorts']['title']['id'] = 'title';
   $handler->display->display_options['sorts']['title']['table'] = 'node';

@@ -3,6 +3,7 @@ description = Configurations for WSDL Docs module.
 core = 7.x
 package = WSDL Docs
 version = 7.x-1.0
+dependencies[] = context
 dependencies[] = ctools
 dependencies[] = entityreference
 dependencies[] = features

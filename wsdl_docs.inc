@@ -309,7 +309,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
     );
     for ($field_id = 0; $field_id < 3; $field_id++) {
       // Recurse and get each bit to render its own input element
-      $element[$field_id] = wsdl_docs_request_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes);
+      $element[$field_id] = wsdl_docs_request_data($field_id, $actual_type, NULL, $data[$field_id], $datatypes, NULL);
       $element[$field_id]['#collapsed'] = TRUE;
     }
     return $element;

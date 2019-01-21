@@ -6,96 +6,97 @@ SmartDocs version for SOAP which converts operations from the WSDL to nodes.
 
 USAGE
 -----
- 
+
 *This module creates nodes from Operations in a WSDL and allows sending of SOAP requests for those operations.
 
 *Ensure SOAP is installed on your server.
 
 *Enable Required modules
-  wsdl_docs
-  wsclient
-  wsclient_soap
-  entityreference
-  pathauto (If you want SEO friendly URLs on operation nodes)
+    wsdl_docs
+    wsclient
+    wsclient_soap
+    entityreference
+    pathauto (If you want SEO friendly URLs on operation nodes)
 
 *Enable Features
-  wsdl_docs_features
+    wsdl_docs_features
 
-*Import
-  Import WSDL
-  /admin/content/wsdl_docs/add
+*Import WSDL via Drupal admin UI
+    /admin/content/wsdl_docs/add
 
-  *View created operation nodes
+*View created operation nodes
+    /admin/content, filter by Type: 'WSDL Docs Operation'
+
+*Update existing service/operations via Drupal admin UI
+    Click edit on admin/content/wsdl_docs for the service you want to update the operations on.
+    Click save.
+
+*View updated operations (see updated timestamp on node)
     /admin/content
 
-*Update
-  Update existing service
-  Click edit on admin/content/wsdl_docs for the service you want to update the operations on.
-  Click save. 
-
-  *View updated operations (see updated timestamp on node)
-    /admin/content
-
-  *View Operations and services
+*View Operations and services from front end
     /soap_apis
 
 *Run Operation
-  From /soap_apis Click through to your operation 
-  Executing that request will then display the request that is being made 
-  (in raw form with headers and payload) and the response that came back, 
-  also displaying the response headers and response data or message if any.
-  If you have devel.module enabled, a rendered dump of the data structure 
-  (PHP objects constructed by the wsclient) will also be displayed.
+    From /soap_apis click select a service.
+    All of the service's operations will be displayed via a table generated using Views.
+    Select an operation.
+    Executing that request will display the following:
+        *the request that is being made (in raw form with headers and payload)
+        *the response that came back, also displaying
+        *the response headers and response data or message if any.
+        *If you have devel.module enabled, a rendered dump of the data structure (PHP objects constructed by the wsclient) will also be displayed.
 
 *REST Endpoint Import
-  Configure HTTP basic auth credentials
-  /admin/content/wsdl_docs/basic_auth
+    Configure HTTP basic auth credentials at /admin/content/wsdl_docs/basic_auth
+    The examples below use Advanced REST Client (ARC) to send the POST request to our REST endpoint.
 
-  *Import from URL: This example will use Advanced REST Client to send the POST request to our REST endpoint.
+    *Import from URL
 
-  *TEST WSDL
-  http://www.thomas-bayer.com/axis2/services/BLZService?wsdlde (this only has one operation so is good to use but can use any of the samples above).
+        *Configure ARC:
+            Method is POST
+            Host is your devportal URL
+            Path is /wsdl_docs_import
+            Authorization:
+                Authorization method: Basic authorization
+                Set authorization data to the username/password you entered at admin/content/wsdl_docs/basic_auth
+            Body:
+                Body content type: application/x-www-form-urlencoded
+                Editor view: Form data (www-url-form-encoded)
+            Form Parameters:
+                url: The web address of the WSDL.
+                name: The human readable label of the webservice that appears at /soap_apis.
 
-  *Post to this url
-    /wsdl_docs_import
-    Add parameters.
-    url: The web address of the WSDL.
-    name: The human readable label of the webservice that appears at /soap_apis.
+    *Import from File
 
-  *View the created service at admin/content/wsdl_docs.
+        *Configure ARC:
+            Method is POST
+            Host is your devportal URL
+            Path is /wsdl_docs_import
+            Query parameter:
+                name: The human readable label of the webservice that appears at /soap_apis.
+            Authorization:
+                Authorization method: Basic authorization
+                Set authorization data to the username/password you entered at admin/content/wsdl_docs/basic_auth
+            Body:
+                Body content type: 'application/octet-stream' then choose file and upload.
 
-  *View created nodes
-   /admin/content
+    *Send
+        If successful when you send the request, you will get a 200 OK and a response "Create [x] service" where x is the ID of the new service
 
-*File Upload to Endpoint
-  *This module has the ability to import via /wsdl_docs_import from a binary file upload, to test with ARC.
+    *If updating an existing service, if successful you will get a 200 OK and a response "UPDATE [x] SERVICE" where x is the ID of the new service
 
-  *Add parameter 'name'.
+    *View the created/updated service at admin/content/wsdl_docs or soap_apis/[x]
 
-  *Add basic auth header.
-
-  *Set content-type header to application/x-www-form-urlencoded.
-
-  *On “Body content type” tab choose 'application/octet-stream' then choose file and upload.
-
-  *Send
-    If service does not exist you will see “CREATE {ID} SERVICE” and it will create the service.
-    If it exists you will see “UPDATE {ID} SERVICE” and it will update the nodes associated with the service.
-
-  *View the created or updated service at admin/content/wsdl_docs.
-
-  *View created or updated nodes
-   /admin/content
-
-
+    *View created/updated nodes at admin/content or soap_apis/[name]/[operation name]
 
 Sample WSDLs for testing (taken from Apigee Edge SOAP proxy demo)
-http://s3.amazonaws.com/ec2-downloads/ec2.wsdl
-https://www.paypalobjects.com/wsdl/PayPalSvc.wsdl
-http://webservices.flightexplorer.com/FastTrack.asmx?wsdl
-http://doc.s3.amazonaws.com/2006-03-01/AmazonS3.wsdl
-http://www.thomas-bayer.com/axis2/services/BLZService?wsdl (useful to test only 1 operation)
-https://graphical.weather.gov/xml/DWMLgen/wsdl/ndfdXML.wsdl
+    http://s3.amazonaws.com/ec2-downloads/ec2.wsdl
+    https://www.paypalobjects.com/wsdl/PayPalSvc.wsdl
+    http://webservices.flightexplorer.com/FastTrack.asmx?wsdl
+    http://doc.s3.amazonaws.com/2006-03-01/AmazonS3.wsdl
+    http://www.thomas-bayer.com/axis2/services/BLZService?wsdl (useful to test only 1 operation)
+    https://graphical.weather.gov/xml/DWMLgen/wsdl/ndfdXML.wsdl
 
 INFO
 ----

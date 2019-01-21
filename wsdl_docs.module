@@ -56,7 +56,7 @@ function wsdl_docs_menu() {
     'page arguments' => array('wsdl_docs_form'),
     'access arguments' => array('access administration pages'),
     'type' => MENU_NORMAL_ITEM,
-    'description'=> 'SmartDocs for SOAP webservices',
+    'description' => 'SmartDocs for SOAP webservices',
     'weight' => -99,
   );
 
@@ -66,7 +66,7 @@ function wsdl_docs_menu() {
     'page arguments' => array('wsclient_service', NULL, 'add'),
     'access callback' => 'entity_access',
     'access arguments' => array('create', 'wsclient_service'),
-    'description'=> "Import WSDL files to create docs for your SOAP services",
+    'description' => "Import WSDL files to create docs for your SOAP services",
     'type' => MENU_LOCAL_ACTION,
   );
 
@@ -75,13 +75,17 @@ function wsdl_docs_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('wsdl_docs_basic_auth_form'),
     'access arguments' => array('access administration pages'),
-    'description'=> "Configure basic auth for your rest endpoint /wsdl_docs_import used for CI/CD",
+    'description' => "Configure basic auth for your rest endpoint /wsdl_docs_import used for CI/CD",
     'type' => MENU_LOCAL_ACTION,
   );
 
   return $items;
 }
 
+/**
+ * Page callback from hook_menu().
+ * @return string
+ */
 function wsdl_docs_import() {
   // If $_POST has data then it's imported by URL.
   if (!empty($_POST)) {
@@ -92,7 +96,7 @@ function wsdl_docs_import() {
     // Get service ID by service URL.
     $service_id = db_select('wsclient_service', 'ws')
       ->fields('ws', array('id'))
-      ->condition('ws.url', $_POST['url'])
+      ->condition('ws.url', check_plain($_POST['url']))
       ->execute()
       ->fetchField();
     // If service exists.
@@ -106,7 +110,7 @@ function wsdl_docs_import() {
     // If service does not exist.
     else {
       // Create new service.
-      $service = wsdl_docs_create_wsclient_service($_POST['url'], $_POST['name']);
+      $service = wsdl_docs_create_wsclient_service(check_plain($_POST['url']), check_plain($_POST['name']));
       // Create or update operations.
       wsdl_docs_update_wsclient_service($service);
       return 'CREATE ' . $service->id . ' SERVICE';
@@ -222,7 +226,7 @@ function wsdl_docs_create_wsclient_service_upload($name, $filename) {
  *   wsclient_service entity.
  * @param object $DOMDocument
  */
-function wsdl_docs_update_wsclient_service($service, $DOMDocument = null) {
+function wsdl_docs_update_wsclient_service($service, $DOMDocument = NULL) {
   // Rebuild types and operations in service.
   $endpoint = $service->endpoint();
   $endpoint->initializeMetadata(TRUE);
@@ -319,7 +323,7 @@ function wsdl_docs_update_service_operations($entity, $DOMDocument) {
           $documentations[$operation_name] = $documentation[0]->nodeValue;
         }
       }
-      // For output (step 1): parsing correct output like WSDL viewer is multi step process. 
+      // For output (step 1): parsing correct output like WSDL viewer is multi step process.
       $message = $operation->getElementsByTagName('output')[0]->getAttribute('message');
       // Remove "tns:" namespace so we can parse the element.
       $message = _wsdl_docs_rem_namespace($message);
@@ -328,7 +332,7 @@ function wsdl_docs_update_service_operations($entity, $DOMDocument) {
     }
   }
 
-  // For output (step 2)
+  // For output (step 2).
   $messages = $DOMDocument->getElementsByTagName('message');
   foreach ($messages as $message) {
     $message_name = $message->getAttribute('name');
@@ -469,18 +473,18 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
       }
     }
     elseif ($key == 'url') {
-      /*$new_form['file_upload'] = array(
+      /* $new_form['file_upload'] = array(
         '#type' => 'managed_file',
         '#upload_location' => 'private://wsdl_docs_files/',
         '#title' => 'file upload',
         '#upload_validators' => array(
           'file_validate_extensions' => array('txt xml wsdl'),
         ),
-      );*/
-      /*$new_form['file_upload'] = array(
+      ); */
+      /* $new_form['file_upload'] = array(
         '#type' => 'file',
         '#title' => 'file upload',
-      );*/
+      ); */
     }
   }
   $form = $new_form;
@@ -529,19 +533,18 @@ function wsdl_docs_wsclient_service_form_submit($form, &$form_state) {
     $service = entity_load_single('wsclient_service', $service_id);
     // Create or update operations.
     wsdl_docs_update_wsclient_service($service);
-	if(module_exists('pathauto')) {
-	  // Create path alias for the WSDL service.
-	  $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
-	  if(!$path) {
-		module_load_include('inc', 'pathauto');
-		$p = pathauto_create_alias('smartdocs_wsdl', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'smartdocs_wsdl', $language = LANGUAGE_NONE);
-		watchdog('smartdocs_wsdl', '<pre>' . print_r($p, 1) . '</pre>');
-
-	  }
-	}
+    if (module_exists('pathauto')) {
+      // Create path alias for the WSDL service.
+      $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
+      if (!$path) {
+        module_load_include('inc', 'pathauto');
+        $p = pathauto_create_alias('wsdl_docs', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'wsdl_docs', LANGUAGE_NONE);
+        watchdog('wsdl_docs', '<pre>' . print_r($p, 1) . '</pre>');
+      }
+    }
     // Add redirect to the list of services.
-    if ($form['#action'] == '/admin/content/smartdocs_wsdl/add') {
-      $form_state['redirect'] = 'admin/content/smartdocs_wsdl';
+    if ($form['#action'] == '/admin/content/wsdl_docs/add') {
+      $form_state['redirect'] = 'admin/content/wsdl_docs';
     }
   }
 }
@@ -596,9 +599,9 @@ function wsdl_docs_node_view($node, $view_mode, $langcode) {
       $link = '';
       if (substr($service->url, 0, 7) != 'private') {
         $url = 'https://services.w3.org/xslt?xslfile=http://tomi.vanek.sk/xml/wsdl-viewer.xsl&amp;xmlfile=' . $service->url;
-        $link = l('View WSDL', $url);
+        $link = l(t('View WSDL'), $url);
       }
-      $raw_wsdl_link = l('View raw WSDL XML', $service->url);
+      $raw_wsdl_link = l(t('View raw WSDL XML'), $service->url);
       $node->content['apiform'] = array(
         '#markup' => '<span class="wsdl-viewer">' . $link . '</span><br><span class="wsdl-file">' . $raw_wsdl_link . '</span>' . drupal_render($form),
         '#weight' => 100,
@@ -727,20 +730,20 @@ function wsdl_docs_basic_auth($id = 'basic_auth', $callback = '', array $argumen
  */
 function wsdl_docs_token_info() {
   $types['wsdl_docs'] = array(
-	'name' => t("Wsdl service"),
-	'description' => t("Wsdl service."),
+    'name' => t("Wsdl service"),
+    'description' => t("Wsdl service."),
   );
 
   $wsdl['title'] = array(
-	'name' => t("Wsdl service name"),
-	'description' => t("Token for service name"),
+    'name' => t("Wsdl service name"),
+    'description' => t("Token for service name"),
   );
 
   return array(
-	'types' => $types,
-	'tokens' => array(
-	  'wsdl_docs' => $wsdl
-	),
+    'types' => $types,
+    'tokens' => array(
+      'wsdl_docs' => $wsdl
+    ),
   );
 }
 
@@ -751,13 +754,13 @@ function wsdl_docs_tokens($type, $tokens, array $data = array(), array $options 
   $replacements = array();
   $sanitize = !empty($options['sanitize']);
   if ($type == 'wsdl_docs') {
-	foreach ($tokens as $name => $original) {
-	  switch ($name) {
-		case 'title':
-		  $replacements[$original] = $sanitize ? filter_xss($data['service']->label) : $data['service']->label;
-		  break;
-	  }
-	}
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+      case 'title':
+        $replacements[$original] = $sanitize ? filter_xss($data['service']->label) : $data['service']->label;
+        break;
+      }
+    }
   }
 
   return $replacements;
@@ -766,17 +769,17 @@ function wsdl_docs_tokens($type, $tokens, array $data = array(), array $options 
 /**
  * Implements hook_pathauto().
  */
-function smartdocs_wsdl_pathauto($op) {
+function wsdl_docs_pathauto($op) {
   switch ($op) {
     case 'settings':
       $settings = new stdClass();
-      $settings->module = 'smartdocs_wsdl';
+      $settings->module = 'wsdl_docs';
       $settings->groupheader = t('Wsdl service paths');
       $settings->patterndescr = t('Default path pattern');
-      $settings->patterndefault = 'soap_apis/[smartdocs_wsdl:title]';
-      $settings->token_type = 'smartdocs_wsdl';
+      $settings->patterndefault = 'soap_apis/[wsdl_docs:title]';
+      $settings->token_type = 'wsdl_docs';
       $settings->patternitems = array('wsdl' => 'Smartdocs wsdl');
-      $settings->batch_update_callback = 'smartdocs_wsdl_pathauto_bulkupdate';
+      $settings->batch_update_callback = 'wsdl_docs_pathauto_bulkupdate';
       return $settings;
 
     default:
@@ -785,10 +788,10 @@ function smartdocs_wsdl_pathauto($op) {
 }
 
 /**
- * Implements hook_pathauto_bulkupdate.
+ * Implements batch_update_callback() required by wsdl_docs_pathauto().
  */
 function wsdl_docs_pathauto_bulkupdate() {
-
+  // @todo
 }
 
 /**
@@ -797,7 +800,7 @@ function wsdl_docs_pathauto_bulkupdate() {
  * For the Related APIs block displayed on a given operations node,
  * filter by referenced service.
  */
-function smartdocs_wsdl_views_pre_view(&$view, &$display_id, &$args) {
+function wsdl_docs_views_pre_view(&$view, &$display_id, &$args) {
   if (($view->name == 'operations') && ($display_id == 'api_explorer')) {
     // Get referenced service.
     $node = menu_get_object();

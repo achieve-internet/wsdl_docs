@@ -1,13 +1,13 @@
 <?php
 /**
  * @file
- * smartdocs_wsdl_features.context.inc
+ * wsdl_docs_features.context.inc
  */
 
 /**
  * Implements hook_context_default_contexts().
  */
-function smartdocs_wsdl_features_context_default_contexts() {
+function wsdl_docs_features_context_default_contexts() {
   $export = array();
 
   $context = new stdClass();

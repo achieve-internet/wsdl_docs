@@ -180,10 +180,10 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
   $timer_before = microtime();
   try {
     if ($operation['name']) {
-      $response = $service->invoke($operation['name'], $args);
+      $service->invoke($operation['name'], $args);
     }
     elseif ($operation['label']) {
-      $response = $service->invoke($operation['label'], $args);
+      $service->invoke($operation['label'], $args);
     }
   }
   catch (Exception $e) {

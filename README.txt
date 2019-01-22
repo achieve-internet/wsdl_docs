@@ -108,6 +108,11 @@ It was designed to handle advanced, nested complex types as data structures
 that can be both submitted and retrieved. If wsclient can manage the data, we 
 should be able to expose it.
 
+SUPPORT
+-------
+
+This module is supported through community efforts and pull requests. For any customizations please contact Achieve Internet https://www.achieveinternet.com/contact-us.
+
 HISTORY
 -------
 

@@ -38,7 +38,7 @@ function wsdl_docs_menu_alter(&$items) {
 function wsdl_docs_menu() {
   // Page for importing services by url or file
   $items['wsdl_docs_import'] = array(
-    'title' => 'SmartDocs WSDL Import',
+    'title' => 'WSDL Import',
     'page callback' => 'wsdl_docs_import',
     'delivery callback' => 'drupal_json_output',
     'access callback' => 'wsdl_docs_basic_auth',
@@ -51,17 +51,17 @@ function wsdl_docs_menu() {
   );
 
   $items['admin/content/wsdl_docs'] = array(
-    'title' => 'SmartDocs WSDL',
+    'title' => 'WSDL Docs',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('wsdl_docs_form'),
     'access arguments' => array('access administration pages'),
     'type' => MENU_NORMAL_ITEM,
-    'description' => 'SmartDocs for SOAP webservices',
+    'description' => 'API documentation for SOAP webservices',
     'weight' => -99,
   );
 
   $items['admin/content/wsdl_docs/add'] = array(
-    'title' => 'Add SmartDocs WSDL',
+    'title' => 'Add WSDL Doc',
     'page callback' => 'entity_ui_get_form',
     'page arguments' => array('wsclient_service', NULL, 'add'),
     'access callback' => 'entity_access',
@@ -618,15 +618,15 @@ function wsdl_docs_node_view($node, $view_mode, $langcode) {
  * @return array
  */
 function wsdl_docs_basic_auth_form($form, &$form_state) {
-  $form['smartdocs_basic_auth_username'] = array(
+  $form['wsdl_docs_basic_auth_username'] = array(
     '#type' => 'textfield',
     '#title' => 'Username',
-    '#default_value' => variable_get('smartdocs_basic_auth_username', ''),
+    '#default_value' => variable_get('wsdl_docs_basic_auth_username', ''),
   );
-  $form['smartdocs_basic_auth_password'] = array(
+  $form['wsdl_docs_basic_auth_password'] = array(
     '#type' => 'textfield',
     '#title' => 'Password',
-    '#default_value' => variable_get('smartdocs_basic_auth_password', ''),
+    '#default_value' => variable_get('wsdl_docs_basic_auth_password', ''),
   );
 
   return system_settings_form($form);
@@ -698,8 +698,8 @@ function wsdl_docs_views_pre_render(&$view) {
  *   A state of authentication.
  */
 function wsdl_docs_basic_auth($id = 'basic_auth', $callback = '', array $arguments = []) {
-  $username = variable_get('smartdocs_basic_auth_username', '');
-  $password = variable_get('smartdocs_basic_auth_password', '');
+  $username = variable_get('wsdl_docs_basic_auth_username', '');
+  $password = variable_get('wsdl_docs_basic_auth_password', '');
 
   // Credentials for authentication were received.
   if (isset($_SERVER['PHP_AUTH_PW'], $_SERVER['PHP_AUTH_USER'])) {
@@ -778,7 +778,7 @@ function wsdl_docs_pathauto($op) {
       $settings->patterndescr = t('Default path pattern');
       $settings->patterndefault = 'soap_apis/[wsdl_docs:title]';
       $settings->token_type = 'wsdl_docs';
-      $settings->patternitems = array('wsdl' => 'Smartdocs wsdl');
+      $settings->patternitems = array('wsdl' => 'WSDL Docs');
       $settings->batch_update_callback = 'wsdl_docs_pathauto_bulkupdate';
       return $settings;
 

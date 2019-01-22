@@ -2,7 +2,7 @@
 WSDL Docs
 =========================
 
-Devportal documentation for SOAP which converts operations from the WSDL to nodes.
+SOAP API documentation via WSDL imports.  Converts operations from the WSDL to nodes.
 
 USAGE
 -----

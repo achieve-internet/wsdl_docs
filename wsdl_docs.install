@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * @file
+ * Install file for WSDL docs module.
+ */
+
+/**
+ * Add the description field in the entity.
+ */
+function wsdl_docs_schema_alter(&$schema) {
+  $schema['wsclient_service']['fields']['description'] = array(
+    'description' => 'The description of the service.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => FALSE,
+  );
+  $schema['wsclient_service']['fields']['uid'] = array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  $schema['wsclient_service']['fields']['created'] = array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+}
+
+function wsdl_docs_install() {
+  db_add_field('wsclient_service', 'description', array(
+    'description' => 'The description of the service.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => FALSE,
+  ));
+  db_add_field('wsclient_service', 'uid', array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+  db_add_field('wsclient_service', 'created', array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+
+  variable_set('pathauto_node_operations_pattern', 'soap_apis/[node:field-service-ref:label]/[node:title]');
+}
+
+function wsdl_docs_uninstall() {
+  db_drop_field('wsclient_service', 'description');
+  db_drop_field('wsclient_service', 'uid');
+  db_drop_field('wsclient_service', 'created');
+}

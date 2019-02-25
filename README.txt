@@ -18,7 +18,6 @@ USAGE
     entityreference
     pathauto (If you want SEO friendly URLs on operation nodes)
 
-
 *Enable Features
     wsdl_docs_features
 
@@ -109,12 +108,20 @@ It was designed to handle advanced, nested complex types as data structures
 that can be both submitted and retrieved. If wsclient can manage the data, we 
 should be able to expose it.
 
-SUPPORT
--------
-
-This module is supported through community efforts and pull requests. For any customizations please contact Achieve Internet https://www.achieveinternet.com/contact-us.
-
 HISTORY
 -------
 
 This module started as a request for a standalone form to test web services before digging into rules http://drupal.org/node/1812504 -> https://www.drupal.org/node/1929778 it then became absorbed into WSClient https://www.drupal.org/project/wsclient. Later on it was customized to focus on testing SOAP webservices https://github.com/apickelsimer/soap_client_portal it's latest iteration is wsdl_docs.
+
+This module was originally developed by Alex Borsody (AlexBorsody) - https://www.drupal.org/u/alexborsody.
+Clean-up and additional configuration work contributed by Kristin Brinner (kbrinner) - https://www.drupal.org/u/kbrinner.
+
+MAINTAINERS
+-----------
+
+Current maintainers:
+* Alex Borsody (AlexBorsody) - https://www.drupal.org/u/alexborsody
+* Kristin Brinner (kbrinner) - https://www.drupal.org/u/kbrinner
+
+This project has been sponsored by:
+* Achieve Internet - https://www.drupal.org/achieve-internet

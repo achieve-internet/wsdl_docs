@@ -779,13 +779,6 @@ function wsdl_docs_pathauto($op) {
 }
 
 /**
- * Implements hook_pathauto_bulkupdate.
- */
-function wsdl_docs_pathauto_bulkupdate() {
-
-}
-
-/**
  * Implements batch_update_callback() required by wsdl_docs_pathauto().
  */
 function wsdl_docs_pathauto_bulkupdate() {

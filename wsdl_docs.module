@@ -49,6 +49,18 @@ function wsdl_docs_menu() {
     ),
     'type' => MENU_CALLBACK,
   );
+  // Page for deleting service
+  $items['wsdl_docs/%/delete'] = array(
+    'page callback' => 'wsdl_docs_service_delete',
+    'delivery callback' => 'drupal_json_output',
+    'access callback' => 'wsdl_docs_basic_auth',
+    'access arguments' => array(
+      'wsdl_docs_service_delete',
+      'user_access',
+      array('access content'),
+    ),
+    'type' => MENU_CALLBACK,
+  );
 
   $items['admin/content/wsdl_docs'] = array(
     'title' => 'SmartDocs WSDL',
@@ -164,6 +176,23 @@ function wsdl_docs_import() {
       return 'CREATE ' . $service->id . ' SERVICE';
     }
   }
+}
+
+function wsdl_docs_service_delete() {
+  // Get service id by service name.
+  $service_id = db_select('wsclient_service', 'ws')
+    ->fields('ws', array('id'))
+    ->condition('ws.label', arg(1))
+    ->execute()
+    ->fetchField();
+  // If service exists.
+  if (is_numeric($service_id)) {
+    // Delete the service
+    entity_delete('wsclient_service', $service_id);
+    return 'The service has been deleted.';
+  }
+
+  return 'ERROR the service name parameter';
 }
 
 /**

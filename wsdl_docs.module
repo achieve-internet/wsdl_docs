@@ -83,34 +83,12 @@ function wsdl_docs_menu() {
 
 /**
  * Implements hook_services_resources().
- * Base path is [my-portal-url]/wsdl_docs/services.
- *
  */
-function wsdl_docs_services_resource() {
-  $service = [
-    'wsdl_docs' => [
-      'operations' => [
-        'retrieve' => [
-          'help' => 'Retrieve a WSDL Docs service',
-          'file' => array(
-            'type' => 'inc',
-            'module' => 'wsdl_docs',
-            'name' => 'wsdl_docs'
-          ),
-          'callback' => '_wsdl_docs_service_retrieve',
-          'args' => array(
-            array(
-              'name' => 'name',
-              'type' => 'string',
-              'description' => 'The human readable label of the webservice that appears at /soap_apis',
-              'source' => array('path' => 0),
-              'optional' => FALSE,
-            ),
-          ),
-          'access callback' => 'user_access',
-          'access arguments' => array('view content'),
-        ],
-        'create' => [
+function wsdl_docs_services_resources() {
+  return array(
+    'wsdl' => array(
+      'operations' => array(
+        'create' => array(
           'help' => 'Create a WSDL Operation',
           'file' => array(
             'type' => 'inc',
@@ -120,27 +98,19 @@ function wsdl_docs_services_resource() {
           'callback' => '_wsdl_docs_service_create',
           'args' => array(
             array(
-              'name' => 'name',
-              'type' => 'string',
-              'description' => 'The human readable label of the webservice that appears at /soap_apis',
-              'source' => array('data' => 'name'),
-              'optional' => FALSE,
-            ),
-            array(
-              'name' => 'url',
-              'type' => 'string',
-              'description' => 'The URL of the web service',
-              'source' => array('data' => 'url'),
+              'name' => 'data',
+              'type' => 'struct',
+              'description' => 'The WSDL Doc',
+              'source' => 'data',
               'optional' => FALSE,
             ),
           ),
           'access callback' => 'user_access',
-          'access arguments' => array('view content'),
-        ],
-      ],
-    ],
-  ];
-  return $service;
+          'access arguments' => array('access content'),
+        ),
+      ),
+    ),
+  );
 }
 
 function wsdl_docs_import() {

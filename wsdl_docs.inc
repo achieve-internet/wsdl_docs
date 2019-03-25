@@ -504,3 +504,21 @@ function wsdl_docs_node_load_by_title($title, $node_type) {
     return node_load(array_shift(array_keys($entities['node'])));
   }
 }
+
+/**
+ * Create a web service and its operations.
+ * Callback from wsdl_docs_services_resource().
+ *
+ * @param $name
+ * @param $url
+ */
+function _wsdl_docs_service_create($name, $url) {
+  // Create new service.
+  $service = wsdl_docs_create_wsclient_service($url, $name);
+  // Create or update operations.
+  wsdl_docs_update_wsclient_service($service);
+}
+
+function _wsdl_docs_service_update($name, $url) {
+
+}

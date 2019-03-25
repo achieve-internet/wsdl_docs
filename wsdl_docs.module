@@ -36,19 +36,6 @@ function wsdl_docs_menu_alter(&$items) {
  * Implements hook_menu().
  */
 function wsdl_docs_menu() {
-  // Page for importing services by url or file
-  $items['wsdl_docs_import'] = array(
-    'title' => 'WSDL Docs',
-    'page callback' => 'wsdl_docs_import',
-    'delivery callback' => 'drupal_json_output',
-    'access callback' => 'wsdl_docs_basic_auth',
-    'access arguments' => array(
-      'wsdl_docs_import',
-      'user_access',
-      array('access content'),
-    ),
-    'type' => MENU_CALLBACK,
-  );
   // Page for deleting service
   $items['wsdl_docs/%/delete'] = array(
     'page callback' => 'wsdl_docs_service_delete',

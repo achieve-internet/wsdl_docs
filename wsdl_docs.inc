@@ -505,20 +505,28 @@ function wsdl_docs_node_load_by_title($title, $node_type) {
   }
 }
 
-/**
- * Create a web service and its operations.
- * Callback from wsdl_docs_services_resource().
- *
- * @param $name
- * @param $url
- */
-function _wsdl_docs_service_create($name, $url) {
+function _wsdl_docs_service_create($data) {
   // Create new service.
-  $service = wsdl_docs_create_wsclient_service($url, $name);
-  // Create or update operations.
+  $service = wsdl_docs_create_wsclient_service($data['url'], $data['name']);
   wsdl_docs_update_wsclient_service($service);
+  return "WSDL Doc added";
 }
 
-function _wsdl_docs_service_update($name, $url) {
-
+function _wsdl_docs_service_update($name, $data) {
+  // Get service ID by service name and url.
+  $service_id = db_select('wsclient_service', 'ws')
+    ->fields('ws', array('id'))
+    ->condition('ws.name', $name)
+    ->condition('ws.url', $data['url'])
+    ->execute()
+    ->fetchField();
+  // If service exists.
+  if (is_numeric($service_id)) {
+    // load existing service
+    $service = entity_load_single('wsclient_service', $service_id);
+    // create or update operations
+    wsdl_docs_update_wsclient_service($service);
+    return "UPDATE SERVICE: $name, ID: $service_id";
+  }
+  return "WSDL Doc not updated. No WSDL Doc matching the name and resource url was found.";
 }

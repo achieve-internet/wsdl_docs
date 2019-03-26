@@ -16,6 +16,7 @@ define('WSDL_DIRECTORY', 'private://wsdl_docs_files/');
  * Implements hook_init().
  */
 function wsdl_docs_init() {
+  //@todo remove this - should be a better way to add css
   if (arg(0) == 'soap_apis') {
     drupal_add_css(drupal_get_path('module', 'wsdl_docs') . '/ui/ui.css');
   }
@@ -89,7 +90,7 @@ function wsdl_docs_services_resources() {
     'wsdl' => array(
       'operations' => array(
         'create' => array(
-          'help' => 'Create a WSDL Operation',
+          'help' => 'Create a WSDL Doc',
           'file' => array(
             'type' => 'inc',
             'module' => 'wsdl_docs',
@@ -97,6 +98,33 @@ function wsdl_docs_services_resources() {
           ),
           'callback' => '_wsdl_docs_service_create',
           'args' => array(
+            array(
+              'name' => 'data',
+              'type' => 'struct',
+              'description' => 'The WSDL Doc',
+              'source' => 'data',
+              'optional' => FALSE,
+            ),
+          ),
+          'access callback' => 'user_access',
+          'access arguments' => array('access content'),
+        ),
+        'update' => array(
+          'help' => 'Update a WSDL Doc',
+          'file' => array(
+            'type' => 'inc',
+            'module' => 'wsdl_docs',
+            'name' => 'wsdl_docs'
+          ),
+          'callback' => '_wsdl_docs_service_update',
+          'args' => array(
+            array(
+              'name' => 'id',
+              'type' => 'string',
+              'description' => 'The name of the service to update',
+              'source' => array('path' => '0'),
+              'optional' => FALSE,
+            ),
             array(
               'name' => 'data',
               'type' => 'struct',

@@ -572,3 +572,29 @@ function _wsdl_docs_get_service_id($name) {
     ->fetchField();
   return $service_id;
 }
+
+/**
+ * @param $name
+ */
+function _wsdl_docs_service_import($name) {
+  // Get existing service ID.
+  $service_id = _wsdl_docs_get_service_id($name);
+  if (is_numeric($service_id)) {
+    // Load existing service
+    $service = entity_load_single('wsclient_service', $service_id);
+    // Manipulate $_FILES to match form version.
+    $_FILES['files'] = $_FILES['soap_api_definition'];
+    // Confirm file is of correct type.
+    $tmp = explode(".", $_FILES['soap_api_definition']['name']);
+    $ext = array_pop($tmp);
+    if ($ext != 'wsdl') {
+      return services_error(t('incorrect file format'), 500);
+    }
+    // Save wsdl file to service.
+    $wsdl = file_get_contents($_FILES['soap_api_definition']);
+    $directory = WSDL_DIRECTORY;
+    file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+    $filename = WSDL_DIRECTORY . $name . '.wsdl';
+    file_unmanaged_save_data($wsdl, $filename, FILE_EXISTS_REPLACE);
+  }
+}

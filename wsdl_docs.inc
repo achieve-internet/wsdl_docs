@@ -505,6 +505,11 @@ function wsdl_docs_node_load_by_title($title, $node_type) {
   }
 }
 
+/**
+ * @param array $data
+ *  Array of body data passed via POST
+ * @return string
+ */
 function _wsdl_docs_service_create($data) {
   // Create new service.
   $service = wsdl_docs_create_wsclient_service($data['url'], $data['name']);
@@ -512,15 +517,16 @@ function _wsdl_docs_service_create($data) {
   return "WSDL Doc added";
 }
 
+/**
+ * @param string $name
+ *  Name of the WSDL Docs service being updated
+ * @param array $data
+ *  Array of body data passed via PUT
+ * @return string
+ *  Success or failure of update request.
+ */
 function _wsdl_docs_service_update($name, $data) {
-  // Get service ID by service name and url.
-  $service_id = db_select('wsclient_service', 'ws')
-    ->fields('ws', array('id'))
-    ->condition('ws.name', $name)
-    ->condition('ws.url', $data['url'])
-    ->execute()
-    ->fetchField();
-  // If service exists.
+  $service_id = _wsdl_docs_get_service_id($name);
   if (is_numeric($service_id)) {
     // load existing service
     $service = entity_load_single('wsclient_service', $service_id);
@@ -529,4 +535,40 @@ function _wsdl_docs_service_update($name, $data) {
     return "UPDATE SERVICE: $name, ID: $service_id";
   }
   return "WSDL Doc not updated. No WSDL Doc matching the name and resource url was found.";
+}
+
+/**
+ * @param $name
+ *  Name of the WSDL Docs service being deleted
+ * @param $data
+ *  Array of body data passed via DELETE
+ * @return string
+ *  Success or failure of DELETE request.
+ */
+function _wsdl_docs_service_delete($name, $data) {
+  $service_id = _wsdl_docs_get_service_id($name);
+  if (is_numeric($service_id)) {
+    entity_delete('wsclient_service', $service_id);
+    return "DELETE SERVICE: $name, ID: $service_id";
+  }
+  return "WSDL Doc not deleted. No WSDL Doc matching the name was found.";
+}
+
+/**
+ * @param string $name
+ *  Name of the WSDL Docs service being updated
+ * @param string $url
+ *  URL of WSDL Doc.
+ * @return string|NULL mixed
+ *  Service ID or NULL if not found.
+ */
+function _wsdl_docs_get_service_id($name) {
+  // Get service ID by service name and url.
+  // @todo what happens if there are 2 services with the same name?
+  $service_id = db_select('wsclient_service', 'ws')
+    ->fields('ws', array('id'))
+    ->condition('ws.name', $name)
+    ->execute()
+    ->fetchField();
+  return $service_id;
 }

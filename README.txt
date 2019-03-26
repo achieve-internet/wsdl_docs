@@ -17,6 +17,7 @@ USAGE
     wsclient_soap
     entityreference
     pathauto (If you want SEO friendly URLs on operation nodes)
+    services and rest_server (If you want to create a REST endpoint for CRUD operations on WSDL docs)
 
 *Enable Features
     wsdl_docs_features
@@ -30,6 +31,16 @@ USAGE
 *Update existing service/operations via Drupal admin UI
     Click edit on admin/content/wsdl_docs for the service you want to update the operations on.
     Click save.
+
+*CRUD WSDL Docs via REST (thanks to Services module)
+    Make sure the services module is enabled
+    At admin/structure/services/add add your service, select REST as the Server, and save
+    Once you've added your service, click on the Edit Resources configuration option at admin/structure/services for your service
+    Under the WSDL resource, select the operations you want to make available (CUD available only right now) and save
+    Also configure your server and authentication configs as desired.
+    Create: POST to [your-website-url]/[your-service-path-to-endpoint]/wsdl, {name, URL}
+    Update: PUT to [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name], {URL}
+    Delete: DELETE to [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name]
 
 *View updated operations (see updated timestamp on node)
     /admin/content

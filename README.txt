@@ -47,49 +47,6 @@ USAGE
         *the response headers and response data or message if any.
         *If you have devel.module enabled, a rendered dump of the data structure (PHP objects constructed by the wsclient) will also be displayed.
 
-*REST Endpoint Import
-    Configure HTTP basic auth credentials at /admin/content/wsdl_docs/basic_auth
-    The examples below use Advanced REST Client (ARC) to send the POST request to our REST endpoint.
-
-    *Import from URL
-
-        *Configure ARC:
-            Method is POST
-            Host is your devportal URL
-            Path is /wsdl_docs_import
-            Authorization:
-                Authorization method: Basic authorization
-                Set authorization data to the username/password you entered at admin/content/wsdl_docs/basic_auth
-            Body:
-                Body content type: application/x-www-form-urlencoded
-                Editor view: Form data (www-url-form-encoded)
-            Form Parameters:
-                url: The web address of the WSDL.
-                name: The human readable label of the webservice that appears at /soap_apis.
-
-    *Import from File
-
-        *Configure ARC:
-            Method is POST
-            Host is your devportal URL
-            Path is /wsdl_docs_import
-            Query parameter:
-                name: The human readable label of the webservice that appears at /soap_apis.
-            Authorization:
-                Authorization method: Basic authorization
-                Set authorization data to the username/password you entered at admin/content/wsdl_docs/basic_auth
-            Body:
-                Body content type: 'application/octet-stream' then choose file and upload.
-
-    *Send
-        If successful when you send the request, you will get a 200 OK and a response "Create [x] service" where x is the ID of the new service
-
-    *If updating an existing service, if successful you will get a 200 OK and a response "UPDATE [x] SERVICE" where x is the ID of the new service
-
-    *View the created/updated service at admin/content/wsdl_docs or soap_apis/[x]
-
-    *View created/updated nodes at admin/content or soap_apis/[name]/[operation name]
-
 Sample WSDLs for testing (taken from Apigee Edge SOAP proxy demo)
     http://s3.amazonaws.com/ec2-downloads/ec2.wsdl
     https://www.paypalobjects.com/wsdl/PayPalSvc.wsdl

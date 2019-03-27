@@ -38,9 +38,20 @@ USAGE
     Once you've added your service, click on the Edit Resources configuration option at admin/structure/services for your service
     Under the WSDL resource, select the operations you want to make available (CUD available only right now) and save
     Also configure your server and authentication configs as desired.
-    Create: POST to [your-website-url]/[your-service-path-to-endpoint]/wsdl, {name, URL}
-    Update: PUT to [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name], {URL}
-    Delete: DELETE to [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name]
+    Create: curl -X POST
+            [your-website-url]/[your-service-path-to-endpoint]/wsdl
+            -H 'Content-Type: application/json'
+            -d '{"name": "test8", "url": "http://www.thomas-bayer.com/axis2/services/BLZService?wsdl"}'
+    Update: curl -X PUT
+            [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl-doc-name]
+            -H 'Content-Type: application/json'
+            -d '{"url": "https://graphical.weather.gov/xml/DWMLgen/wsdl/ndfdXML.wsdl"}'
+    Delete: curl -X DELETE
+            http://lando-kaiser.lndo.site/wsdl_docs/services/wsdl/[wsdl doc name]
+    Import: curl -X POST
+            [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name]/import
+            -H 'content-type: multipart/form-data'
+            -F 'soap_api_definition=@[path-to-wsdl]'
 
 *View updated operations (see updated timestamp on node)
     /admin/content

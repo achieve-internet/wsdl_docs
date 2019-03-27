@@ -452,7 +452,6 @@ function wsdl_docs_update_service_operations($service, $DOMDocument) {
       $outputs[$name] = _wsdl_docs_get_output($name, $_outputs_messages, $_messages_elements, $_elements_types, $_types_properties);
     }
   }
-
   // List of new operations.
   $operations = $service->operations;
   // Get old operations for this service.
@@ -586,7 +585,7 @@ function wsdl_docs_wsclient_service_form_submit($form, &$form_state) {
     $service = entity_load_single('wsclient_service', $service_id);
     // Create or update operations.
     wsdl_docs_update_wsclient_service($service);
-	if(module_exists('pathauto')) {
+	if (module_exists('pathauto')) {
 	  // Create path alias  for wsdl service
 	  $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
 	  if(!$path) {

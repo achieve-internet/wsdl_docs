@@ -23,6 +23,17 @@ function wsdl_docs_init() {
 }
 
 /**
+ * Implements hook_permission().
+ */
+function wsdl_docs_permission() {
+  return array(
+    'use wsdl docs services' => array(
+      'title' => t('WSDL Docs Operations using Services module'),
+    ),
+  );
+}
+
+/**
  * Implements hook_menu_alter().
  *
  * Hide default webservice menu because it could confuse users, if we make this contrib may want to remove this or make it conditional.
@@ -110,7 +121,7 @@ function wsdl_docs_services_resources() {
             ),
           ),
           'access callback' => 'user_access',
-          'access arguments' => array('access content'),
+          'access arguments' => array('use wsdl docs services'),
         ),
         'update' => array(
           'help' => 'Update a WSDL Doc',
@@ -137,7 +148,7 @@ function wsdl_docs_services_resources() {
             ),
           ),
           'access callback' => 'user_access',
-          'access arguments' => array('access content'),
+          'access arguments' => array('use wsdl docs services'),
         ),
         'delete' => array(
           'help' => 'Delete a WSDL Doc',
@@ -157,7 +168,7 @@ function wsdl_docs_services_resources() {
             ),
           ),
           'access callback' => 'user_access',
-          'access arguments' => array('access content'),
+          'access arguments' => array('use wsdl docs services'),
         ),
       ),
       'targeted_actions' => array(
@@ -170,7 +181,7 @@ function wsdl_docs_services_resources() {
           ),
           'callback' => '_wsdl_docs_service_import',
           'access callback' => 'user_access',
-          'access arguments' => array('access content'),
+          'access arguments' => array('use wsdl docs services'),
           'args' => array(
             array(
               'name' => 'name',

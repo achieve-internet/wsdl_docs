@@ -27,9 +27,9 @@ function wsdl_docs_init() {
  *
  * Hide default webservice menu because it could confuse users, if we make this contrib may want to remove this or make it conditional.
  */
-function wsdl_docs_menu_alter(&$items) {
-  $items['admin/config/services']['access callback'] = FALSE;
-}
+//function wsdl_docs_menu_alter(&$items) {
+//  $items['admin/config/services']['access callback'] = FALSE;
+//}
 
 /**
  * Publish our testing UI and ajax callbacks.
@@ -37,7 +37,7 @@ function wsdl_docs_menu_alter(&$items) {
  * Implements hook_menu().
  */
 function wsdl_docs_menu() {
-  // Page for deleting service
+  // Page for deleting a WSDL service.
   $items['wsdl_docs/%/delete'] = array(
     'page callback' => 'wsdl_docs_service_delete',
     'delivery callback' => 'drupal_json_output',
@@ -49,7 +49,7 @@ function wsdl_docs_menu() {
     ),
     'type' => MENU_CALLBACK,
   );
-
+  // Display all WSDL services.
   $items['admin/content/wsdl_docs'] = array(
     'title' => 'WSDL Docs',
     'page callback' => 'drupal_get_form',
@@ -59,7 +59,7 @@ function wsdl_docs_menu() {
     'description'=> 'WSDL docs',
     'weight' => -99,
   );
-
+  // Add a WSDL service.
   $items['admin/content/wsdl_docs/add'] = array(
     'title' => 'Add WSDL',
     'page callback' => 'entity_ui_get_form',
@@ -69,21 +69,24 @@ function wsdl_docs_menu() {
     'description'=> "Import WSDL files to create docs for your SOAP services",
     'type' => MENU_LOCAL_ACTION,
   );
-
-  $items['admin/content/wsdl_docs/basic_auth'] = array(
-    'title' => 'Basic Auth for REST Import',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('wsdl_docs_basic_auth_form'),
-    'access arguments' => array('access administration pages'),
-    'description'=> "Configure basic auth for your rest endpoint /wsdl_docs_import used for CI/CD",
-    'type' => MENU_LOCAL_ACTION,
-  );
+  // @todo delete, use auth provided by services module
+//  $items['admin/content/wsdl_docs/basic_auth'] = array(
+//    'title' => 'Basic Auth for REST Import',
+//    'page callback' => 'drupal_get_form',
+//    'page arguments' => array('wsdl_docs_basic_auth_form'),
+//    'access arguments' => array('access administration pages'),
+//    'description'=> "Configure basic auth for your rest endpoint /wsdl_docs_import used for CI/CD",
+//    'type' => MENU_LOCAL_ACTION,
+//  );
 
   return $items;
 }
 
 /**
  * Implements hook_services_resources().
+ *
+ * Provide create, update, and delete operations for WSDL services
+ * via REST endpoint thanks to the Services module.
  */
 function wsdl_docs_services_resources() {
   return array(
@@ -103,7 +106,7 @@ function wsdl_docs_services_resources() {
               'type' => 'struct',
               'description' => 'The WSDL Doc',
               'source' => 'data',
-              'optional' => FALSE,
+              'optional' => TRUE,
             ),
           ),
           'access callback' => 'user_access',
@@ -190,6 +193,10 @@ function wsdl_docs_services_resources() {
   );
 }
 
+/**
+ * FAPI page callback.
+ * @todo this is very similar to _wsdl_docs_service_delete in .inc file - combine?
+ */
 function wsdl_docs_service_delete() {
   // Get service id by service name.
   $service_id = db_select('wsclient_service', 'ws')
@@ -208,12 +215,12 @@ function wsdl_docs_service_delete() {
 }
 
 /**
- * Create service by importing URL.
+ * Create WSDL service by providing URL of WSDL resource.
  *
  * @param string $url
- *   Service URL.
+ *   WSDL resource URL.
  * @param string $name
- *   Service name.
+ *   WSDL service name.
  * @return object
  *   Returns wsclient_service entity.
  */
@@ -236,10 +243,10 @@ function wsdl_docs_create_wsclient_service($url, $name = '') {
 }
 
 /**
- * Create service from importing by file upload.
+ * Create WSDL service by providing WSDL file.
  *
  * @param string $name
- *   Service name.
+ *   WSDL service name.
  * @param string $filename
  *   Filename as service URL.
  * @return object
@@ -249,7 +256,8 @@ function wsdl_docs_create_wsclient_service_upload($name, $filename) {
   $service = entity_create('wsclient_service', array('type' => 'soap'));
   $service->label = $name;
   $service->name = strtolower(str_replace('-', '_', str_replace(' ', '_', $name)));
-  // Set path to local file as service URL.
+  // Set path to local file as WSDL resource URL.
+  // Files are provided by REST import only, not via the admin UI when creating a WSDL service entity.
   $service->url = $filename;
   // Disable cache WSDL.
   $service->settings = array('options' => array('cache_wsdl' => WSDL_CACHE_NONE));
@@ -268,7 +276,9 @@ function wsdl_docs_update_wsclient_service($service, $DOMDocument = null) {
   $endpoint = $service->endpoint();
   $endpoint->initializeMetadata(TRUE);
   $service->save();
-
+  // @todo - i think this should get added a separate call in the functions
+  // using wsdl_docs_update_wsclient_service - it is confusing to update the service
+  // and then nest updating of the operations in the service update function.
   // Create or update operations nodes.
   wsdl_docs_update_service_operations($service, $DOMDocument);
   rules_clear_cache();
@@ -333,6 +343,10 @@ function _wsdl_docs_get_output($operation_name, &$_outputs_messages, &$_messages
 }
 
 /**
+ * After WSDL service has been updated with a different URL or file describing the SOAP resource,
+ * update all of its operation nodes accordingly.
+ *
+ * @todo - do the old operation nodes get deleted too?
  * @param object $entity
  *   wsclient_service entity.
  * @param object $DOMDocument

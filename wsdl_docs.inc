@@ -511,8 +511,9 @@ function wsdl_docs_node_load_by_title($title, $node_type) {
  * @return string
  */
 function _wsdl_docs_service_create($data) {
-  // Create new service.
+  // Create new WSDL service.
   $service = wsdl_docs_create_wsclient_service($data['url'], $data['name']);
+  // Create WSDL service's operation nodes.
   wsdl_docs_update_wsclient_service($service);
   return "WSDL Doc added";
 }
@@ -526,12 +527,14 @@ function _wsdl_docs_service_create($data) {
  *  Success or failure of update request.
  */
 function _wsdl_docs_service_update($name, $data) {
-  // @todo its not doing anything with the data
   $service_id = _wsdl_docs_get_service_id($name);
   if (is_numeric($service_id)) {
     // load existing WSDL service
     $service = entity_load_single('wsclient_service', $service_id);
-    // update WSDL service
+    // Update existing WSDL service's URL.
+    $service->url = $data['url'];
+    $service->save();
+    // update WSDL service's operation nodes
     $wsdl = file_get_contents($data['url']);
     $DOMDocument = new DOMDocument();
     $DOMDocument->loadXML($wsdl);
@@ -579,6 +582,11 @@ function _wsdl_docs_get_service_id($name) {
 
 /**
  * @param $name
+ *
+ * curl -X POST \
+http://lando-kaiser.lndo.site/wsdl_docs/services/wsdl/test8/import \
+-H 'content-type: multipart/form-data' \
+-F 'soap_api_definition=@/Users/kbrinner/projects/lando-kaiser/sites/all/modules/contrib/wsdl_docs/bayer.wsdl'
  */
 function _wsdl_docs_service_import($name) {
   // Get existing service ID.
@@ -601,7 +609,8 @@ function _wsdl_docs_service_import($name) {
     $filename = WSDL_DIRECTORY . $name . '-' . $service_id . '.wsdl';
     file_unmanaged_save_data($wsdl, $filename, FILE_EXISTS_REPLACE);
     // Save new WSDL file to existing WSDL service entity.
-    $service->url = WSDL_DIRECTORY . $filename;
+    $service->url = $filename;
+    $service->save();
     // Load file contents.
     $DOMDocument = new DOMDocument();
     $loaded = $DOMDocument->loadXML($wsdl);

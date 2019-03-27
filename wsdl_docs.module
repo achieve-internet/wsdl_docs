@@ -105,7 +105,7 @@ function wsdl_docs_services_resources() {
             array(
               'name' => 'data',
               'type' => 'struct',
-              'description' => 'The WSDL Doc',
+              'description' => 'The name of the Service being created',
               'source' => 'data',
               'optional' => TRUE,
             ),
@@ -163,7 +163,7 @@ function wsdl_docs_services_resources() {
       ),
       'targeted_actions' => array(
         'import' => array(
-          'help' => 'Import WSDL file. POST multipart/form-data',
+          'help' => 'Import WSDL file. POST multipart/form-data or URL to WSDL resource',
           'file' => array(
             'type' => 'inc',
             'module' => 'wsdl_docs',
@@ -182,7 +182,7 @@ function wsdl_docs_services_resources() {
             ),
             array(
               'name' => 'soap_api_definition',
-              'optional' => TRUE,
+              'optional' => FALSE,
               'source' => 'data',
               'description' => 'The file parameters',
               'type' => 'array',

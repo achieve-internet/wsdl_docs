@@ -37,7 +37,7 @@ Note: Use HTTP Basic Auth for these APIs (Username/password is the credentials f
 -H 'Content-Type: application/json' \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
 -d '{"name": "test8", "url": "http://www.thomas-bayer.com/axis2/services/BLZService?wsdl"}'`
-#### Update a WSDL Doc Service and its Operations
+#### Update a WSDL Doc Service's Operations by URL of WSDL resource
 `curl -X PUT [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl-doc-name] \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
 -H 'Content-Type: application/json' \
@@ -45,7 +45,7 @@ Note: Use HTTP Basic Auth for these APIs (Username/password is the credentials f
 #### Delete a WSDL Doc Service and its Operations
 `curl -X DELETE [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name] \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ='`
-#### Import a WSDL to an Existing Service
+#### Import a WSDL to an Existing Service by WSDL file
 `curl -X POST [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name]/import \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
 -H 'content-type: multipart/form-data' \

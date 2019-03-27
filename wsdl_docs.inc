@@ -584,7 +584,7 @@ function _wsdl_docs_get_service_id($name) {
  * @param $name
  *
  * curl -X POST \
-http://lando-kaiser.lndo.site/wsdl_docs/services/wsdl/test8/import \
+http://lando-kaiser.lndo.site/wsdl_docs/services/wsdl/test223/import \
 -H 'content-type: multipart/form-data' \
 -F 'soap_api_definition=@/Users/kbrinner/projects/lando-kaiser/sites/all/modules/contrib/wsdl_docs/bayer.wsdl'
  */
@@ -594,6 +594,15 @@ function _wsdl_docs_service_import($name) {
   if (is_numeric($service_id)) {
     // Load existing service
     $service = entity_load_single('wsclient_service', $service_id);
+  }
+  else {
+    // Create a new WSDL service.
+    $service = entity_create('wsclient_service', array('type' => 'soap'));
+    $service->label = $name;
+    $service->name = strtolower(str_replace('-', '_', str_replace(' ', '_', $name)));
+    $service->save();
+    $service_id = $service->id;
+  }
     // Manipulate $_FILES to match form version.
     $_FILES['files'] = $_FILES['soap_api_definition'];
     // Confirm file is of correct type.
@@ -620,5 +629,5 @@ function _wsdl_docs_service_import($name) {
     // Update existing service with new specs per file upload.
     wsdl_docs_update_wsclient_service($service, $DOMDocument);
     return "WSDL Doc: $name, id: $service_id updated.";
-  }
+
 }

@@ -511,11 +511,22 @@ function wsdl_docs_node_load_by_title($title, $node_type) {
  * @return string
  */
 function _wsdl_docs_service_create($data) {
+  // Confirm service name is unique
+  $service_id = _wsdl_docs_get_service_id($data['name']);
+  if ($service_id) {
+    return "Service with this name already exists";
+  }
+  // @todo - this duplicates wsdl_docs_create_wsclient_service() but we need to do something a little different here.
   // Create new WSDL service.
-  $service = wsdl_docs_create_wsclient_service($data['url'], $data['name']);
+  $service = entity_create('wsclient_service', array('type' => 'soap'));
+  $service->label = $data['name'];
+  $service->name = strtolower(str_replace('-', '_', str_replace(' ', '_', $data['name'])));
+  $service->save();
   // Create WSDL service's operation nodes.
-  wsdl_docs_update_wsclient_service($service);
-  return "WSDL Doc added";
+  // wsdl_docs_update_wsclient_service($service);
+  $name = $data['name'];
+  $id = $service->id;
+  return "WSDL service $name, ID: $id added.";
 }
 
 /**
@@ -585,45 +596,55 @@ function _wsdl_docs_get_service_id($name) {
  *  Name of the WSDL Docs service being updated/created
  * @return mixed|string
  */
-function _wsdl_docs_service_import($name) {
+function _wsdl_docs_service_import($name, $data) {
   // Get existing service ID.
   $service_id = _wsdl_docs_get_service_id($name);
   if (is_numeric($service_id)) {
-    // Load existing service
+    // Load existing service.
     $service = entity_load_single('wsclient_service', $service_id);
   }
   else {
-    // Create a new WSDL service.
-    $service = entity_create('wsclient_service', array('type' => 'soap'));
-    $service->label = $name;
-    $service->name = strtolower(str_replace('-', '_', str_replace(' ', '_', $name)));
+    return "No service found with this name.";
+  }
+  // See if WSDL being imported by file or by URL.
+  if (!empty($data['url'])) {
+    // Import via URL.
+    $service->url = $data['url'];
+    $service->status = 1;
     $service->save();
-    $service_id = $service->id;
+    // Create WSDL service's operation nodes.
+    $wsdl = file_get_contents($service->url);
+    $DOMDocument = new DOMDocument();
+    $DOMDocument->loadXML($wsdl);
+    wsdl_docs_update_service_operations($service, $DOMDocument);
   }
-  // Manipulate $_FILES to match form version.
-  $_FILES['files'] = $_FILES['soap_api_definition'];
-  // Confirm file is of correct type.
-  $tmp = explode(".", $_FILES['soap_api_definition']['name']);
-  $ext = array_pop($tmp);
-  if ($ext != 'wsdl') {
-    return services_error(t('incorrect file format'), 500);
+  else {
+    // Import via file.
+    // Manipulate $_FILES to match form version.
+    $_FILES['files'] = $_FILES['soap_api_definition'];
+    // Confirm file is of correct type.
+    $tmp = explode(".", $_FILES['soap_api_definition']['name']);
+    $ext = array_pop($tmp);
+    if ($ext != 'wsdl') {
+      return services_error(t('incorrect file format'), 500);
+    }
+    // Save wsdl file.
+    $wsdl = file_get_contents($_FILES['soap_api_definition']['tmp_name']);
+    $directory = WSDL_DIRECTORY;
+    file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+    $filename = WSDL_DIRECTORY . $name . '-' . $service_id . '.wsdl';
+    file_unmanaged_save_data($wsdl, $filename, FILE_EXISTS_REPLACE);
+    // Save new WSDL file to existing WSDL service entity.
+    $service->url = $filename;
+    $service->save();
+    // Load file contents.
+    $DOMDocument = new DOMDocument();
+    $loaded = $DOMDocument->loadXML($wsdl);
+    if (!$loaded) {
+      return 'ERROR input file is not XML';
+    }
+    // Update existing service with new specs per file upload.
+    wsdl_docs_update_wsclient_service($service, $DOMDocument);
   }
-  // Save wsdl file.
-  $wsdl = file_get_contents($_FILES['soap_api_definition']['tmp_name']);
-  $directory = WSDL_DIRECTORY;
-  file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
-  $filename = WSDL_DIRECTORY . $name . '-' . $service_id . '.wsdl';
-  file_unmanaged_save_data($wsdl, $filename, FILE_EXISTS_REPLACE);
-  // Save new WSDL file to existing WSDL service entity.
-  $service->url = $filename;
-  $service->save();
-  // Load file contents.
-  $DOMDocument = new DOMDocument();
-  $loaded = $DOMDocument->loadXML($wsdl);
-  if (!$loaded) {
-    return 'ERROR input file is not XML';
-  }
-  // Update existing service with new specs per file upload.
-  wsdl_docs_update_wsclient_service($service, $DOMDocument);
   return "WSDL Doc: $name, id: $service_id updated.";
 }

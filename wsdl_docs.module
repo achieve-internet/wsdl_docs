@@ -80,6 +80,16 @@ function wsdl_docs_menu() {
     'description'=> "Import WSDL files to create docs for your SOAP services",
     'type' => MENU_LOCAL_ACTION,
   );
+  // @todo delete, use auth provided by services module
+//  $items['admin/content/wsdl_docs/basic_auth'] = array(
+//    'title' => 'Basic Auth for REST Import',
+//    'page callback' => 'drupal_get_form',
+//    'page arguments' => array('wsdl_docs_basic_auth_form'),
+//    'access arguments' => array('access administration pages'),
+//    'description'=> "Configure basic auth for your rest endpoint /wsdl_docs_import used for CI/CD",
+//    'type' => MENU_LOCAL_ACTION,
+//  );
+
   return $items;
 }
 
@@ -511,39 +521,33 @@ function wsdl_docs_update_service_operations($service, $DOMDocument) {
  * Implements hook_form_FORM_ID_alter().
  */
 function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
-  // Add a new file field to form.
-  $form['wsdl_file'] = array(
-    '#title' => t('File'),
-    '#type' => 'managed_file',
-    '#description' => t('Instead of adding the URL of web service, you can upload the file directly here.'),
-    '#upload_location' => WSDL_DIRECTORY,
-    '#required' => FALSE,
-    '#weight' => -2,
-    "#upload_validators"  => array("file_validate_extensions" => array("wsdl")),
-  );
-  // Alter wsclient service form fields.
+  // Add the description field after the machine name field.
   $new_form = array();
   foreach ($form as $key => $data) {
     $new_form[$key] = $data;
-    switch ($key) {
-      case 'name':
-        $new_form['description'] = array(
-          '#type' => 'textfield',
-          '#title' => t('Description'),
-          '#maxlength' => 255,
-          '#weight' => -4,
-        );
-        if (!empty($form_state['wsclient_service']->description)) {
-          $new_form['description']['#default_value'] = $form_state['wsclient_service']->description;
-        }
-        break;
-      case 'url':
-        $new_form[$key]['#required'] = FALSE;
-        $new_form[$key]['#weight'] = -3;
-        break;
-      case 'label':
-        $new_form[$key]['#weight'] = -5;
-        break;
+    if ($key == 'name') {
+      $new_form['description'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Description'),
+        '#maxlength' => 255,
+      );
+      if (!empty($form_state['wsclient_service']->description)) {
+        $new_form['description']['#default_value'] = $form_state['wsclient_service']->description;
+      }
+    }
+    elseif ($key == 'url') {
+      /*$new_form['file_upload'] = array(
+        '#type' => 'managed_file',
+        '#upload_location' => 'private://wsdl_docs_files/',
+        '#title' => 'file upload',
+        '#upload_validators' => array(
+          'file_validate_extensions' => array('txt xml wsdl'),
+        ),
+      );*/
+      /*$new_form['file_upload'] = array(
+        '#type' => 'file',
+        '#title' => 'file upload',
+      );*/
     }
   }
   $form = $new_form;
@@ -560,6 +564,7 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
     $form['global_parameters']['#access'] = FALSE;
   }
 
+  // $form['url']['#required'] = false;
   // replace the wsclient_ui_element_url_validate function
   $form['url']['#element_validate'][0] = 'wsdl_docs_wsclient_ui_element_url_validate';
 

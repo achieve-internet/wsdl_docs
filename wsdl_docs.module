@@ -519,6 +519,7 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
     '#upload_location' => WSDL_DIRECTORY,
     '#required' => FALSE,
     '#weight' => -2,
+    "#upload_validators"  => array("file_validate_extensions" => array("wsdl")),
   );
   // Alter wsclient service form fields.
   $new_form = array();
@@ -574,8 +575,19 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
  * @param array $form_state
  */
 function wsdl_docs_wsclient_ui_element_url_validate($element, &$form_state) {
-  if (strpos($element['#value'], WSDL_DIRECTORY) === FALSE && !valid_url($element['#value'], TRUE)) {
-    form_error($element, t('Please enter a valid URL.'));
+  // Check to make sure user has either entered a URL or uploaded a file.
+  if (empty($form_state['input']['url']) && empty($form_state['input']['wsdl_file']['fid'])) {
+    form_error($element, t('Please enter a URL or upload a file.'));
+  }
+  // Check that user hasn't uploaded both a URL and a file.
+  if (!empty($form_state['input']['url']) && !empty($form_state['input']['wsdl_file']['fid'])) {
+    form_error($element, t('Please enter only a file OR a URL, not both.'));
+  }
+  // If user entered a URL, make sure it is valid.
+  if (empty($form_state['input']['wsdl_file']['fid'])) {
+    if (strpos($element['#value'], WSDL_DIRECTORY) === FALSE && !valid_url($element['#value'], TRUE)) {
+      form_error($element, t('Please enter a valid URL.'));
+    }
   }
 }
 

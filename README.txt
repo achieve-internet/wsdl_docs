@@ -4,7 +4,7 @@ WSDL Docs
 
 SOAP API documentation via WSDL imports.  Converts operations from the WSDL to nodes.
 
-USAGE
+SETUP
 -----
 
 *This module creates nodes from Operations in a WSDL and allows sending of SOAP requests for those operations.
@@ -22,6 +22,12 @@ USAGE
 *Enable Features
     wsdl_docs_features
 
+*Permissions: There is a 'WSDL Docs Operations using Services module' permission that is checked when making requests via REST. Make sure you add a user that has this permission, and use that user's login credentials when making REST requests.
+
+
+USAGE
+-----
+
 *Import WSDL via Drupal admin UI
     /admin/content/wsdl_docs/add
 
@@ -34,22 +40,25 @@ USAGE
 
 *CRUD WSDL Docs via REST (thanks to Services module)
     Make sure the services module is enabled
-    At admin/structure/services/add add your service, select REST as the Server, and save
+    At admin/structure/services/add add your service, select REST as the Server, and save. Select HTTP basic authentication for the authentication.
     Once you've added your service, click on the Edit Resources configuration option at admin/structure/services for your service
     Under the WSDL resource, select the operations you want to make available (CUD available only right now) and save
-    Also configure your server and authentication configs as desired.
     Create: curl -X POST
             [your-website-url]/[your-service-path-to-endpoint]/wsdl
             -H 'Content-Type: application/json'
+            -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
             -d '{"name": "test8", "url": "http://www.thomas-bayer.com/axis2/services/BLZService?wsdl"}'
     Update: curl -X PUT
             [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl-doc-name]
+            -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
             -H 'Content-Type: application/json'
             -d '{"url": "https://graphical.weather.gov/xml/DWMLgen/wsdl/ndfdXML.wsdl"}'
     Delete: curl -X DELETE
-            http://lando-kaiser.lndo.site/wsdl_docs/services/wsdl/[wsdl doc name]
+            [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name]
+            -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
     Import: curl -X POST
             [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name]/import
+            -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
             -H 'content-type: multipart/form-data'
             -F 'soap_api_definition=@[path-to-wsdl]'
 

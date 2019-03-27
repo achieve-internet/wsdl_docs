@@ -267,6 +267,8 @@ function wsdl_docs_create_wsclient_service_upload($name, $filename) {
 }
 
 /**
+ * Update existing WSDL service.
+ *
  * @param object $service
  *   wsclient_service entity.
  * @param object $DOMDocument
@@ -347,15 +349,15 @@ function _wsdl_docs_get_output($operation_name, &$_outputs_messages, &$_messages
  * update all of its operation nodes accordingly.
  *
  * @todo - do the old operation nodes get deleted too?
- * @param object $entity
+ * @param object $service
  *   wsclient_service entity.
  * @param object $DOMDocument
  */
-function wsdl_docs_update_service_operations($entity, $DOMDocument) {
+function wsdl_docs_update_service_operations($service, $DOMDocument) {
   global $user;
 
   if (!$DOMDocument) {
-    $wsdl = file_get_contents($entity->url);
+    $wsdl = file_get_contents($service->url);
     $DOMDocument = new DOMDocument();
     $DOMDocument->loadXML($wsdl);
   }
@@ -435,7 +437,7 @@ function wsdl_docs_update_service_operations($entity, $DOMDocument) {
 
   // Parse output output (step 4)
   foreach ($elements_types as $type => $element) {
-    $_types_properties[$type] = $entity->datatypes[$type]['property info'];
+    $_types_properties[$type] = $service->datatypes[$type]['property info'];
   }
   $operations = $DOMDocument->getElementsByTagName('binding')[0]->childNodes;
   foreach ($operations as $operation) {
@@ -452,12 +454,12 @@ function wsdl_docs_update_service_operations($entity, $DOMDocument) {
   }
 
   // List of new operations.
-  $operations = $entity->operations;
+  $operations = $service->operations;
   // Get old operations for this service.
   $query = db_select('node', 'n');
   $query->innerjoin('field_data_field_service_ref', 'sr', 'sr.entity_id = n.nid');
   $query->fields('n', array('nid', 'title'));
-  $query->condition('sr.field_service_ref_target_id', $entity->id, '=');
+  $query->condition('sr.field_service_ref_target_id', $service->id, '=');
   $result = $query->execute();
   while ($node = $result->fetchAssoc()) {
     // If old operation exists in new operations list.
@@ -493,7 +495,7 @@ function wsdl_docs_update_service_operations($entity, $DOMDocument) {
     $node->uid = $user->uid;
     $node->status = 1;
     // Set service id as reference on the service.
-    $node->field_service_ref['und'][0]['target_id'] = $entity->id;
+    $node->field_service_ref['und'][0]['target_id'] = $service->id;
     // Set documentation, style and output data.
     $node->field_documentation['und'][0]['value'] = $documentations[$operation['label']] ?: '';
     $node->field_style['und'][0]['value'] = $styles[$operation['label']] ?: '';

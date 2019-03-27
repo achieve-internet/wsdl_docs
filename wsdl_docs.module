@@ -80,16 +80,6 @@ function wsdl_docs_menu() {
     'description'=> "Import WSDL files to create docs for your SOAP services",
     'type' => MENU_LOCAL_ACTION,
   );
-  // @todo delete, use auth provided by services module
-//  $items['admin/content/wsdl_docs/basic_auth'] = array(
-//    'title' => 'Basic Auth for REST Import',
-//    'page callback' => 'drupal_get_form',
-//    'page arguments' => array('wsdl_docs_basic_auth_form'),
-//    'access arguments' => array('access administration pages'),
-//    'description'=> "Configure basic auth for your rest endpoint /wsdl_docs_import used for CI/CD",
-//    'type' => MENU_LOCAL_ACTION,
-//  );
-
   return $items;
 }
 

@@ -631,11 +631,7 @@ function _wsdl_docs_service_import($name) {
     return 'ERROR input file is not XML';
   }
   // Update existing service with new specs per file upload.
-  try {
-    wsdl_docs_update_wsclient_service($service, $DOMDocument);
-  }
-  catch (WSClientException $e) {
-    return "Exception $e";
-  }
+  wsdl_docs_update_wsclient_service($service, $DOMDocument);
+
   return "WSDL Doc: $name, id: $service_id updated.";
 }

@@ -631,6 +631,8 @@ function _wsdl_docs_service_import($name) {
     return 'ERROR input file is not XML';
   }
   // Update existing service with new specs per file upload.
+  // wsclient_soap.module function initializeMetadata() can throw an
+  // uncaught WSClientException exception.
   try {
     wsdl_docs_update_wsclient_service($service, $DOMDocument);
   }

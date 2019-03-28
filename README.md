@@ -24,6 +24,19 @@ SOAP API documentation via WSDL imports.  Converts operations from the WSDL to n
 * Update existing service/operations via Drupal admin UI
     * Click edit on admin/content/wsdl_docs for the service you want to update the operations on.
     * Click save.
+* View updated operations (see updated timestamp on node)
+    * /admin/content
+* View Operations and services from front end
+    * /soap_apis
+* Run Operation
+    * From /soap_apis click select a service.
+    * All of the service's operations will be displayed via a table generated using Views.
+    * Select an operation.
+    * Executing that request will display the following:
+        * the request that is being made (in raw form with headers and payload)
+        * the response that came back, also displaying
+        * the response headers and response data or message if any.
+        * If you have devel.module enabled, a rendered dump of the data structure (PHP objects constructed by the wsclient) will also be displayed.
 
 ## CUD WSDL Docs via REST (thanks to Services module)
 ### Configuring Service
@@ -58,25 +71,6 @@ Note: Use HTTP Basic Auth for these APIs (Username/password is the credentials f
 #### Delete a WSDL Doc Service and its Operations
 `curl -X DELETE [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name] \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ='`
-
-curl -X POST \
-  http://kaiser-lando.lndo.site/wsdl_docs/wsdl/firstone/import \
-  -H 'content-type: multipart/form-data'
-  -F 'soap_api_definition=@/Users/kristin.brinner/projects/kaiser-lando/sites/all/modules/contrib/wsdl_docs/paypal.wsdl'
-
-* View updated operations (see updated timestamp on node)
-    * /admin/content
-* View Operations and services from front end
-    * /soap_apis
-* Run Operation
-    * From /soap_apis click select a service.
-    * All of the service's operations will be displayed via a table generated using Views.
-    * Select an operation.
-    * Executing that request will display the following:
-        * the request that is being made (in raw form with headers and payload)
-        * the response that came back, also displaying
-        * the response headers and response data or message if any.
-        * If you have devel.module enabled, a rendered dump of the data structure (PHP objects constructed by the wsclient) will also be displayed.
 
 ## Sample WSDLs for testing (taken from Apigee Edge SOAP proxy demo)
 * http://s3.amazonaws.com/ec2-downloads/ec2.wsdl

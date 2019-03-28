@@ -25,13 +25,19 @@ SOAP API documentation via WSDL imports.  Converts operations from the WSDL to n
     * Click edit on admin/content/wsdl_docs for the service you want to update the operations on.
     * Click save.
 
-### CUD WSDL Docs via REST (thanks to Services module)
-1. Make sure the services module is enabled
+## CUD WSDL Docs via REST (thanks to Services module)
+### Configuring Service
+1. Make sure the services, services_basic_auth, and rest_server modules are enabled
 1. At admin/structure/services/add add your service, select REST as the Server, select HTTP basic authentication for the authentication, and save.
 1. Once you've added your service, click on the Edit Resources configuration option at admin/structure/services for your service.
 1. Under the WSDL resource, select the operations you want to make available (CUD available only right now) and save.
 1. Make sure you have a user with the permission 'WSDL Docs Operations using Services module'.
-
+### Importing WSDL Docs via REST
+There are 2 possible ways to import a WSDL via REST:
+1. First create your WSDL Doc Service (see Create a WSDL Doc Service below).
+1. Then import the .wsdl file itself via:
+    1. File (see Import a WSDL to an Existing Service by WSDL file below) OR
+    1. URL of WSDL resource (see Update a WSDL Doc Service's Operations by URL of WSDL resource below)
 ### cURL commands for the operations enabled by this module:
 Note: Use HTTP Basic Auth for these APIs (Username/password is the credentials for the account with 'WSDL Docs Operations using Services module' permissions setup on DevPortal)*
 #### Create a WSDL Doc Service

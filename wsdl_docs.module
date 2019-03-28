@@ -273,11 +273,19 @@ function wsdl_docs_create_wsclient_service_upload($name, $filename) {
  * @param object $service
  *   wsclient_service entity.
  * @param object $DOMDocument
+ * @throws \Exception|\WSClientException
  */
 function wsdl_docs_update_wsclient_service($service, $DOMDocument = null) {
   // Rebuild types and operations in service.
-  $endpoint = $service->endpoint();
-  $endpoint->initializeMetadata(TRUE);
+  try {
+    $endpoint = $service->endpoint();
+    $endpoint->initializeMetadata(TRUE);
+  }
+  // wsclient_soap.module function initializeMetadata() can throw an uncaught WSClientException exception
+  catch (WSClientException $e) {
+    throw $e;
+  }
+
   $service->save();
   // @todo - i think this should get added a separate call in the functions
   // using wsdl_docs_update_wsclient_service - it is confusing to update the service

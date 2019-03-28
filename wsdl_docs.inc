@@ -596,7 +596,7 @@ function _wsdl_docs_get_service_id($name) {
  *  Name of the WSDL Docs service being updated/created
  * @return mixed|string
  */
-function _wsdl_docs_service_import($name, $data) {
+function _wsdl_docs_service_import($name) {
   // Get existing service ID.
   $service_id = _wsdl_docs_get_service_id($name);
   if (is_numeric($service_id)) {

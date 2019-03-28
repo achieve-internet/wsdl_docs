@@ -6,11 +6,12 @@ SOAP API documentation via WSDL imports.  Converts operations from the WSDL to n
 * Ensure SOAP is installed on your server.
 * Enable Required modules
     * wsdl_docs
+    * wsdl_docs_features
     * wsclient
     * wsclient_soap
     * entityreference
     * pathauto (If you want SEO friendly URLs on operation nodes)
-    * services and rest_server (If you want to create a REST endpoint for CRUD operations on WSDL docs)
+    * services, services_basic_auth, and rest_server (If you want to create a REST endpoint for CRUD operations on WSDL docs)
 * Enable Features
     * wsdl_docs_features
 * Permissions: There is a 'WSDL Docs Operations using Services module' permission that is checked when making requests via REST. Make sure you add a user that has this permission, and use that user's login credentials when making REST requests.
@@ -26,9 +27,10 @@ SOAP API documentation via WSDL imports.  Converts operations from the WSDL to n
 
 ### CUD WSDL Docs via REST (thanks to Services module)
 1. Make sure the services module is enabled
-1. At admin/structure/services/add add your service, select REST as the Server, and save. Select HTTP basic authentication for the authentication.
-1. Once you've added your service, click on the Edit Resources configuration option at admin/structure/services for your service
-1. Under the WSDL resource, select the operations you want to make available (CUD available only right now) and save
+1. At admin/structure/services/add add your service, select REST as the Server, select HTTP basic authentication for the authentication, and save.
+1. Once you've added your service, click on the Edit Resources configuration option at admin/structure/services for your service.
+1. Under the WSDL resource, select the operations you want to make available (CUD available only right now) and save.
+1. Make sure you have a user with the permission 'WSDL Docs Operations using Services module'.
 
 ### cURL commands for the operations enabled by this module:
 Note: Use HTTP Basic Auth for these APIs (Username/password is the credentials for the account with 'WSDL Docs Operations using Services module' permissions setup on DevPortal)*
@@ -36,7 +38,7 @@ Note: Use HTTP Basic Auth for these APIs (Username/password is the credentials f
 `curl -X POST [your-website-url]/[your-service-path-to-endpoint]/wsdl \
 -H 'Content-Type: application/json' \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
--d '{"name": "test8", "url": "http://www.thomas-bayer.com/axis2/services/BLZService?wsdl"}'`
+-d '{"name": "test8"}'`
 #### Update a WSDL Doc Service's Operations by URL of WSDL resource
 `curl -X PUT [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl-doc-name] \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
@@ -50,6 +52,11 @@ Note: Use HTTP Basic Auth for these APIs (Username/password is the credentials f
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
 -H 'content-type: multipart/form-data' \
 -F 'soap_api_definition=@[path-to-wsdl]'`
+
+curl -X POST \
+  http://kaiser-lando.lndo.site/wsdl_docs/wsdl/firstone/import \
+  -H 'content-type: multipart/form-data'
+  -F 'soap_api_definition=@/Users/kristin.brinner/projects/kaiser-lando/sites/all/modules/contrib/wsdl_docs/paypal.wsdl'
 
 * View updated operations (see updated timestamp on node)
     * /admin/content

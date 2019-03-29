@@ -63,11 +63,12 @@ Note: Use HTTP Basic Auth for these APIs (Username/password is the credentials f
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
 -H 'Content-Type: application/json' \
 -d '{"url": "https://graphical.weather.gov/xml/DWMLgen/wsdl/ndfdXML.wsdl"}'`
-#### Import a WSDL to an Existing Service by WSDL file
+#### Import a WSDL file(s) to an Existing Service by WSDL file
 `curl -X POST [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name]/import \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
 -H 'content-type: multipart/form-data' \
--F 'soap_api_definition=@[path-to-wsdl]'`
+-F 'soap_api_definition[]=@[path-to-wsdl-1]'
+-F 'soap_api_definition[]=@[path-to-wsdl-2]'`
 #### Delete a WSDL Doc Service and its Operations
 `curl -X DELETE [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name] \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ='`

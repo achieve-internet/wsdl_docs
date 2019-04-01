@@ -606,32 +606,71 @@ function _wsdl_docs_service_import($name) {
   else {
     return "No service found with this name.";
   }
-  // Import via file.
-  // Manipulate $_FILES to match form version.
-  $_FILES['files'] = $_FILES['soap_api_definition'];
-  // Confirm file is of correct type.
-  $tmp = explode(".", $_FILES['soap_api_definition']['name']);
-  $ext = array_pop($tmp);
-  if ($ext != 'wsdl') {
-    return services_error(t('incorrect file format'), 500);
+  // Create $_FILES['files'] from array of file information provided by REST request.
+  $_FILES['files'] = array();
+  foreach ($_FILES['soap_api_definition'] as $file_key => $values) {
+    foreach ($values as $key => $value) {
+      $_FILES['files'][$key][$file_key] = $value;
+    }
   }
-  // Save wsdl file.
-  $wsdl = file_get_contents($_FILES['soap_api_definition']['tmp_name']);
+  // Import via file.
+  // First, confirm file(s) is of correct type.
+  foreach ($_FILES['files'] as $key => $file) {
+    $tmp = explode(".", $file['name']);
+    $ext = array_pop($tmp);
+    if ($ext != 'wsdl') {
+      return t('incorrect file format');
+    }
+  }
+  // Second, save file/zip to selected directory.
   $directory = WSDL_DIRECTORY;
   file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
-  $filename = WSDL_DIRECTORY . $name . '-' . $service_id . '.wsdl';
-  file_unmanaged_save_data($wsdl, $filename, FILE_EXISTS_REPLACE);
-  // Save new WSDL file to existing WSDL service entity.
+  // For multiple files, zip them up first.
+  if (count($_FILES['files']) > 1) {
+    $filename = WSDL_DIRECTORY . $name . '-' . $service_id . '.zip';
+    fopen(drupal_realpath($filename), 'w');
+    // Create temp directory for individual WSDL files that will be compressed.
+    $tmp_directory = WSDL_TEMP_DIRECTORY;
+    file_prepare_directory($tmp_directory, FILE_CREATE_DIRECTORY);
+    try {
+      $zip = new ArchiverZip(drupal_realpath($filename));
+      // Save the wsdl files in the zip.
+      foreach ($_FILES['files'] as $key => $file) {
+        $wsdl = file_get_contents($file['tmp_name']);
+        $tmp_filename = WSDL_TEMP_DIRECTORY . $file['name'];
+        file_unmanaged_save_data($wsdl, $tmp_filename, FILE_EXISTS_REPLACE);
+        $zip->add(drupal_realpath($tmp_filename));
+      }
+    }
+    catch (Exception $e) {
+      return ('Error: ' . $e->getMessage());
+    }
+  }
+  // Only 1 file was imported.
+  else {
+    $filename = WSDL_DIRECTORY . $name . '-' . $service_id . '.wsdl';
+    // Even though there is only 1 file here, we don't know what the array key
+    // will be since that is set by the user when POSTing the file.
+    // Function array_key_first() available to php 7.3+ only.
+    $tmp = $_FILES['files'];
+    reset($tmp);
+    $first_key = key($tmp);
+    $wsdl = file_get_contents($_FILES['files'][$first_key]['tmp_name']);
+    file_unmanaged_save_data($wsdl, $filename, FILE_EXISTS_REPLACE);
+  }
+  // Third, save path to new WSDL file/zip to existing WSDL service entity.
   $service->url = $filename;
   $service->save();
-  // Load file contents.
-  $DOMDocument = new DOMDocument();
-  $loaded = $DOMDocument->loadXML($wsdl);
-  if (!$loaded) {
-    return 'ERROR input file is not XML';
+  // Finally, update existing services with new specs per file(s) upload.
+  foreach ($_FILES['files'] as $key => $file) {
+    $wsdl = file_get_contents($file['tmp_name']);
+    $DOMDocument = new DOMDocument();
+    $loaded = $DOMDocument->loadXML($wsdl);
+    if (!$loaded) {
+      return 'ERROR input file is not XML';
+    }
+    // Update existing service with new specs per file upload.
+    wsdl_docs_update_wsclient_service($service, $DOMDocument);
   }
-  // Update existing service with new specs per file upload.
-  wsdl_docs_update_wsclient_service($service, $DOMDocument);
-
   return "WSDL Doc: $name, id: $service_id updated.";
 }

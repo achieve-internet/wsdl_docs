@@ -11,6 +11,7 @@ include_once 'wsdl_docs.inc';
  * Directory for the services files.
  */
 define('WSDL_DIRECTORY', 'private://wsdl_docs_files/');
+define('WSDL_TEMP_DIRECTORY', 'private://wsdl_docs_files/tmp/');
 
 /**
  * Implements hook_init().
@@ -36,7 +37,8 @@ function wsdl_docs_permission() {
 /**
  * Implements hook_menu_alter().
  *
- * Hide default webservice menu because it could confuse users, if we make this contrib may want to remove this or make it conditional.
+ * @todo Hide default webservice menu because it could confuse users, if we make this contrib may want to remove this or make it conditional.
+ *
  */
 //function wsdl_docs_menu_alter(&$items) {
 //  $items['admin/config/services']['access callback'] = FALSE;

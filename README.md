@@ -39,7 +39,7 @@ SOAP API documentation via WSDL imports.  Converts operations from the WSDL to n
         * If you have devel.module enabled, a rendered dump of the data structure (PHP objects constructed by the wsclient) will also be displayed.
 
 ## CUD WSDL Docs via REST (thanks to Services module)
-### Configuring Service
+### Configuring Services
 1. Make sure the services, services_basic_auth, and rest_server modules are enabled
 1. At admin/structure/services/add add your service, select REST as the Server, select HTTP basic authentication for the authentication, and save.
 1. Once you've added your service, click on the Edit Resources configuration option at admin/structure/services for your service.
@@ -49,7 +49,7 @@ SOAP API documentation via WSDL imports.  Converts operations from the WSDL to n
 There are 2 possible ways to import a WSDL via REST:
 1. First create your WSDL Doc Service (see Create a WSDL Doc Service below).
 1. Then import the .wsdl file itself via:
-    1. File (see Import a WSDL to an Existing Service by WSDL file below) OR
+    1. File(s) (see Import a WSDL to an Existing Service by WSDL file below) OR
     1. URL of WSDL resource (see Update a WSDL Doc Service's Operations by URL of WSDL resource below)
 ### cURL commands for the operations enabled by this module:
 Note: Use HTTP Basic Auth for these APIs (Username/password is the credentials for the account with 'WSDL Docs Operations using Services module' permissions setup on DevPortal)*
@@ -59,18 +59,20 @@ Note: Use HTTP Basic Auth for these APIs (Username/password is the credentials f
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
 -d '{"name": "test8"}'`
 #### Update a WSDL Doc Service's Operations by URL of WSDL resource
-`curl -X PUT [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl-doc-name] \
+`curl -X PUT [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl-doc-machine-name] \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
 -H 'Content-Type: application/json' \
 -d '{"url": "https://graphical.weather.gov/xml/DWMLgen/wsdl/ndfdXML.wsdl"}'`
 #### Import a WSDL file(s) to an Existing Service by WSDL file
-`curl -X POST [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name]/import \
+This example shows how to import 2 files. You may import as many as you like, just be sure to increment 'x' for each file: soap_api_definition[x].
+
+`curl -X POST [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl-doc-machine-name]/import \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
 -H 'content-type: multipart/form-data' \
--F 'soap_api_definition[]=@[path-to-wsdl-1]'
--F 'soap_api_definition[]=@[path-to-wsdl-2]'`
+-F 'soap_api_definition[0]=@[path-to-wsdl-1]'
+-F 'soap_api_definition[1]=@[path-to-wsdl-2]'`
 #### Delete a WSDL Doc Service and its Operations
-`curl -X DELETE [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl doc name] \
+`curl -X DELETE [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl-doc-machine-name] \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ='`
 
 ## Sample WSDLs for testing (taken from Apigee Edge SOAP proxy demo)
@@ -95,7 +97,7 @@ should be able to expose it.
 This module started as a request for a standalone form to test web services before digging into rules http://drupal.org/node/1812504 -> https://www.drupal.org/node/1929778 it then became absorbed into WSClient https://www.drupal.org/project/wsclient. Later on it was customized to focus on testing SOAP webservices https://github.com/apickelsimer/soap_client_portal it's latest iteration is wsdl_docs.
 
 This module was originally developed by Alex Borsody (AlexBorsody) - https://www.drupal.org/u/alexborsody.
-Clean-up and additional configuration work contributed by Kristin Brinner (kbrinner) - https://www.drupal.org/u/kbrinner.
+Refactored to use the Services module by Kristin Brinner (kbrinner) - https://www.drupal.org/u/kbrinner.
 
 ## MAINTAINERS
 

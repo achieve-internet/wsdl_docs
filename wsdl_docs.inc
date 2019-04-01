@@ -613,15 +613,16 @@ function _wsdl_docs_service_import($name) {
       $_FILES['files'][$key][$file_key] = $value;
     }
   }
-  // Import via file.
-  // First, confirm file(s) is of correct type.
+
+  // First, confirm file(s) of correct extension.
   foreach ($_FILES['files'] as $key => $file) {
     $tmp = explode(".", $file['name']);
     $ext = array_pop($tmp);
-    if ($ext != 'wsdl') {
+    if (!in_array($ext, array('xsd', 'wsdl'))) {
       return t('incorrect file format');
     }
   }
+
   // Second, save file/zip to selected directory.
   $directory = WSDL_DIRECTORY;
   file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
@@ -648,19 +649,23 @@ function _wsdl_docs_service_import($name) {
   }
   // Only 1 file was imported.
   else {
-    $filename = WSDL_DIRECTORY . $name . '-' . $service_id . '.wsdl';
     // Even though there is only 1 file here, we don't know what the array key
     // will be since that is set by the user when POSTing the file.
     // Function array_key_first() available to php 7.3+ only.
     $tmp = $_FILES['files'];
     reset($tmp);
     $first_key = key($tmp);
+    $get_ext = explode(".", $tmp[$first_key]['name']);
+    $ext = array_pop($get_ext);
+    $filename = WSDL_DIRECTORY . $name . '-' . $service_id . '.' . $ext;
     $wsdl = file_get_contents($_FILES['files'][$first_key]['tmp_name']);
     file_unmanaged_save_data($wsdl, $filename, FILE_EXISTS_REPLACE);
   }
-  // Third, save path to new WSDL file/zip to existing WSDL service entity.
+
+  // Third, save path to new file/zip to existing WSDL service entity.
   $service->url = $filename;
   $service->save();
+
   // Finally, update existing services with new specs per file(s) upload.
   foreach ($_FILES['files'] as $key => $file) {
     $wsdl = file_get_contents($file['tmp_name']);

@@ -183,7 +183,7 @@ function wsdl_docs_services_resources() {
               'description' => 'The name of the WSDL Doc on which the WSDL file should be imported',
             ),
             array(
-              'name' => 'soap_api_definition[]',
+              'name' => 'soap_api_definition',
               'optional' => FALSE,
               'source' => 'data',
               'description' => 'The file parameters',
@@ -515,14 +515,8 @@ function wsdl_docs_update_service_operations($service, $DOMDocument) {
 function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
   // Add the description field after the machine name field.
   $new_form = array();
-  $service = $form_state['wsclient_service'];
-  // Start with 1 field for url.
-  if (empty($form_state['num_urls'])) {
-    $form_state['num_urls'] = 1;
-  }
   foreach ($form as $key => $data) {
     $new_form[$key] = $data;
-    // Change 'name' field to read 'description'
     if ($key == 'name') {
       $new_form['description'] = array(
         '#type' => 'textfield',
@@ -533,30 +527,22 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
         $new_form['description']['#default_value'] = $form_state['wsclient_service']->description;
       }
     }
-    if ($key == 'url') {
-      unset($new_form['url']);
-      // Add ability to have multiple URLs. Probably only used when
-      // using the REST endpoint to upload multiple files.
-      for ($i = 1; $i <= $form_state['num_urls']; $i++) {
-        $new_form['url'][$i] = array(
-          '#type' => 'textfield',
-          '#title' => 'URL',
-          '#default_value' => $service->url,
-          '#required' => TRUE,
-          '#description' => t('The URL of the web service.'),
-          '#element_validate' => array('wsclient_ui_element_url_validate'),
-        );
-      }
+    elseif ($key == 'url') {
+      /*$new_form['file_upload'] = array(
+        '#type' => 'managed_file',
+        '#upload_location' => 'private://wsdl_docs_files/',
+        '#title' => 'file upload',
+        '#upload_validators' => array(
+          'file_validate_extensions' => array('txt xml wsdl'),
+        ),
+      );*/
+      /*$new_form['file_upload'] = array(
+        '#type' => 'file',
+        '#title' => 'file upload',
+      );*/
     }
   }
   $form = $new_form;
-
-  // Add 'add another URL' button for multiple files.
-  $form['add_url'] = array(
-    '#type' => 'submit',
-    '#value' => t('Add another URL'),
-    '#submit' => array('wsdl_docs_form_wsclient_service_form_add_another_url'),
-  );
 
   if (isset($form_state['wsclient_service']->is_new) && $form_state['wsclient_service']->is_new == 1) {
     // Set soap to default on import drop-down and hide to improve UX/UI experience.
@@ -570,19 +556,12 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
     $form['global_parameters']['#access'] = FALSE;
   }
 
+  // $form['url']['#required'] = false;
   // replace the wsclient_ui_element_url_validate function
   $form['url']['#element_validate'][0] = 'wsdl_docs_wsclient_ui_element_url_validate';
 
   // update operations nodes after save service
   $form['#submit'][] = 'wsdl_docs_wsclient_service_form_submit';
-}
-
-/**
- * FAPI callback to add another URL.
- */
-function wsdl_docs_form_wsclient_service_form_add_another_url($form, &$form_state) {
-  $form_state['num_urls']++;
-  $form_state['rebuild'] = TRUE;
 }
 
 /**
@@ -594,9 +573,12 @@ function wsdl_docs_form_wsclient_service_form_add_another_url($form, &$form_stat
  */
 function wsdl_docs_wsclient_ui_element_url_validate($element, &$form_state) {
   // Check to make sure user has either entered a URL or uploaded a file.
-  // @todo form not structured corrected for url here
-  if (empty($form_state['input']['url'][1])) {
-    form_error($element, t('Please enter a URL'));
+  if (empty($form_state['input']['url']) && empty($form_state['input']['wsdl_file']['fid'])) {
+    form_error($element, t('Please enter a URL or upload a file.'));
+  }
+  // Check that user hasn't uploaded both a URL and a file.
+  if (!empty($form_state['input']['url']) && !empty($form_state['input']['wsdl_file']['fid'])) {
+    form_error($element, t('Please enter only a file OR a URL, not both.'));
   }
   // If user entered a URL, make sure it is valid.
   if (empty($form_state['input']['wsdl_file']['fid'])) {

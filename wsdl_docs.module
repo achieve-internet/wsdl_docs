@@ -734,53 +734,6 @@ function wsdl_docs_views_pre_render(&$view) {
 }
 
 /**
- * Perform basic HTTP authentication.
- *
- * @param string $path
- *   Path to protect.
- * @param string $username
- *   Desired username.
- * @param string $password
- *   Desired password.
- * @param string $id
- *   An unique ID for flood controlling.
- * @param string $callback
- *   Additional callback for checking accessibility.
- * @param array $arguments
- *   List of arguments for additional access callback.
- *
- * @return bool
- *   A state of authentication.
- */
-function wsdl_docs_basic_auth($id = 'basic_auth', $callback = '', array $arguments = []) {
-  $username = variable_get('wsdl_docsbasic_auth_username', '');
-  $password = variable_get('wsdl_docsbasic_auth_password', '');
-
-  // Credentials for authentication were received.
-  if (isset($_SERVER['PHP_AUTH_PW'], $_SERVER['PHP_AUTH_USER'])) {
-    $event = $id . '_basic_auth_failed_login_ip';
-    $limit = variable_get($id . '_basic_auth_threshold_limit', 5);
-    $window = variable_get($id . '_basic_auth_threshold_window', 3600);
-
-    if (flood_is_allowed($event, $limit, $window)) {
-      if ($password === $_SERVER['PHP_AUTH_PW'] && $username === $_SERVER['PHP_AUTH_USER']) {
-        flood_clear_event($event);
-
-        return !empty($callback) && is_callable($callback) ? (bool) call_user_func_array($callback, $arguments) : TRUE;
-      }
-
-      flood_register_event($event, $window);
-    }
-  }
-
-  header('WWW-Authenticate: Basic realm="Restricted Area"');
-  header('HTTP/1.1 401 Unauthorized');
-
-  exit('Access denied.');
-}
-
-
-/**
  * Implements hook_token_info().
  */
 function wsdl_docs_token_info() {

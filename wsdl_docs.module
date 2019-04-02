@@ -183,7 +183,7 @@ function wsdl_docs_services_resources() {
               'description' => 'The name of the WSDL Doc on which the WSDL file should be imported',
             ),
             array(
-              'name' => 'soap_api_definition',
+              'name' => 'soap_api_definition[]',
               'optional' => FALSE,
               'source' => 'data',
               'description' => 'The file parameters',
@@ -573,12 +573,8 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
  */
 function wsdl_docs_wsclient_ui_element_url_validate($element, &$form_state) {
   // Check to make sure user has either entered a URL or uploaded a file.
-  if (empty($form_state['input']['url']) && empty($form_state['input']['wsdl_file']['fid'])) {
-    form_error($element, t('Please enter a URL or upload a file.'));
-  }
-  // Check that user hasn't uploaded both a URL and a file.
-  if (!empty($form_state['input']['url']) && !empty($form_state['input']['wsdl_file']['fid'])) {
-    form_error($element, t('Please enter only a file OR a URL, not both.'));
+  if (empty($form_state['input']['url'][1])) {
+    form_error($element, t('Please enter a URL'));
   }
   // If user entered a URL, make sure it is valid.
   if (empty($form_state['input']['wsdl_file']['fid'])) {

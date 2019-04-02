@@ -276,7 +276,7 @@ function wsdl_docs_create_wsclient_service_upload($name, $filename) {
  * @param object $DOMDocument
  */
 function wsdl_docs_update_wsclient_service($service, $DOMDocument = NULL) {
-  // Check if file is wsdl/xsd or zip file
+  // Check if file is wsdl/xsd.
   $endpoint = $service->endpoint();
   // Rebuild types and operations in service.
   $endpoint->initializeMetadata(TRUE);
@@ -564,7 +564,7 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
  * @param array $form_state
  */
 function wsdl_docs_wsclient_ui_element_url_validate($element, &$form_state) {
-  // Check to make sure user has either entered a URL or imported a file.
+  // Check to make sure user has entered a URL.
   if (empty($form_state['input']['url'][1])) {
     form_error($element, t('Please enter a URL'));
   }

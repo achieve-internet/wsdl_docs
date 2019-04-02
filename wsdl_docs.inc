@@ -634,7 +634,7 @@ function _wsdl_docs_service_import($name) {
     }
   }
 
-  // Second, save file/zip to selected directory.
+  // Second, save file to selected directory.
   // @todo - do we want to save each set of files in a subdirectory that is the
   // service name and id to make sure we don't get overwriting of files with the
   // same name?
@@ -642,7 +642,7 @@ function _wsdl_docs_service_import($name) {
   file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
   foreach ($_FILES['files'] as $key => $file) {
     $wsdl = file_get_contents($file['tmp_name']);
-    // For the main WSDL/XSD file (that may refer to other files, name it
+    // For the main WSDL/XSD file that refers to other files, name it
     // [service name]-[service id].wsdl or .xsd, depending on file's extension.
     if ($key == 0) {
       $tmp = explode(".", $file['name']);
@@ -662,15 +662,6 @@ function _wsdl_docs_service_import($name) {
   if (isset($main_filename)) {
     $service->url = $main_filename;
     $service->save();
-  }
-  else {
-    return 'When importing files you must include a file keyed as soap_api_definition[0]';
-  }
-
-
-  // Finally, update existing services with new specs per file(s) upload.
-  // @todo - this only needs to be run on the main file, correct?
-//  foreach ($_FILES['files'] as $key => $file) {
     $wsdl = file_get_contents($main_filename);
     $DOMDocument = new DOMDocument();
     $loaded = $DOMDocument->loadXML($wsdl);
@@ -678,7 +669,11 @@ function _wsdl_docs_service_import($name) {
       return 'ERROR input file is not XML';
     }
     // Update existing service with new specs per file upload.
+    // @todo - this only needs to be run on the main file, correct?
     wsdl_docs_update_wsclient_service($service, $DOMDocument);
-//  }
+  }
+  else {
+    return 'When importing files you must include a file keyed as soap_api_definition[0]';
+  }
   return "WSDL Doc: $name, id: $service_id updated.";
 }

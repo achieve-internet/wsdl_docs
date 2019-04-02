@@ -11,7 +11,6 @@ include_once 'wsdl_docs.inc';
  * Directory for the services files.
  */
 define('WSDL_DIRECTORY', 'private://wsdl_docs_files/');
-define('WSDL_TEMP_DIRECTORY', 'private://wsdl_docs_files/tmp/');
 
 /**
  * Implements hook_init().
@@ -277,8 +276,9 @@ function wsdl_docs_create_wsclient_service_upload($name, $filename) {
  * @param object $DOMDocument
  */
 function wsdl_docs_update_wsclient_service($service, $DOMDocument = null) {
-  // Rebuild types and operations in service.
+  // Check if file is wsdl/xsd or zip file
   $endpoint = $service->endpoint();
+  // Rebuild types and operations in service.
   $endpoint->initializeMetadata(TRUE);
   $service->save();
   // @todo - i think this should get added a separate call in the functions
@@ -518,48 +518,40 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
   foreach ($form as $key => $data) {
     $new_form[$key] = $data;
     if ($key == 'name') {
-      $new_form['description'] = array(
+      $new_form['description'] = [
         '#type' => 'textfield',
         '#title' => t('Description'),
         '#maxlength' => 255,
-      );
+      ];
       if (!empty($form_state['wsclient_service']->description)) {
         $new_form['description']['#default_value'] = $form_state['wsclient_service']->description;
       }
     }
-    elseif ($key == 'url') {
-      /*$new_form['file_upload'] = array(
-        '#type' => 'managed_file',
-        '#upload_location' => 'private://wsdl_docs_files/',
-        '#title' => 'file upload',
-        '#upload_validators' => array(
-          'file_validate_extensions' => array('txt xml wsdl'),
-        ),
-      );*/
-      /*$new_form['file_upload'] = array(
-        '#type' => 'file',
-        '#title' => 'file upload',
-      );*/
-    }
   }
   $form = $new_form;
 
+  // Determine if this is an existing service being edited.
+  // If not, hide some fields to minimize confusion.
+  $existing_service = TRUE;
   if (isset($form_state['wsclient_service']->is_new) && $form_state['wsclient_service']->is_new == 1) {
-    // Set soap to default on import drop-down and hide to improve UX/UI experience.
-    $form['type']['#default_value'] = 'soap';
-    $form['type']['#access'] = FALSE;
+    $existing_service = FALSE;
   }
-  else {
+
+  if ($existing_service) {
     // Hide the fields
     $form['operations']['#access'] = FALSE;
     $form['datatypes']['#access'] = FALSE;
     $form['global_parameters']['#access'] = FALSE;
   }
+  else {
+    // Set soap to default on import drop-down and hide to improve UX/UI experience.
+    $form['type']['#default_value'] = 'soap';
+    $form['type']['#access'] = FALSE;
+  }
 
-  // $form['url']['#required'] = false;
   // replace the wsclient_ui_element_url_validate function
   $form['url']['#element_validate'][0] = 'wsdl_docs_wsclient_ui_element_url_validate';
-
+  $form['#validate'][] = 'wsdl_docs_wsclient_service_form_validate';
   // update operations nodes after save service
   $form['#submit'][] = 'wsdl_docs_wsclient_service_form_submit';
 }
@@ -572,7 +564,7 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
  * @param array $form_state
  */
 function wsdl_docs_wsclient_ui_element_url_validate($element, &$form_state) {
-  // Check to make sure user has either entered a URL or uploaded a file.
+  // Check to make sure user has either entered a URL or imported a file.
   if (empty($form_state['input']['url'][1])) {
     form_error($element, t('Please enter a URL'));
   }
@@ -580,6 +572,28 @@ function wsdl_docs_wsclient_ui_element_url_validate($element, &$form_state) {
   if (empty($form_state['input']['wsdl_file']['fid'])) {
     if (strpos($element['#value'], WSDL_DIRECTORY) === FALSE && !valid_url($element['#value'], TRUE)) {
       form_error($element, t('Please enter a valid URL.'));
+    }
+  }
+}
+
+/**
+ * Validation callback to check if the SOAP service URL points to a valid WSDL
+ * file.
+ */
+function wsdl_docs_wsclient_service_form_validate($form, $form_state) {
+  if ($form_state['values']['type'] == 'soap') {
+    // The url has to point to a valid WSDL file.
+    try {
+      // If initializing the SOAPClient succeeds we're good, otherwise we catch
+      // the exception below and suppress any further warnings.
+      // WARNING: if you have the xdebug PHP module enabled this can cause a
+      // fatal error on invalid WSDL files (instead of a catchable SoapFault
+      // exception).
+      // xdebug_disable();
+      @$endpoint = new SOAPClient($form_state['values']['url']);
+    }
+    catch (SoapFault $e) {
+      form_set_error('url', t('Error parsing the WSDL file: %message', array('%message' => $e->getMessage())));
     }
   }
 }
@@ -795,15 +809,14 @@ function wsdl_docs_tokens($type, $tokens, array $data = array(), array $options 
   $replacements = array();
   $sanitize = !empty($options['sanitize']);
   if ($type == 'wsdl_docs') {
-	foreach ($tokens as $name => $original) {
-	  switch ($name) {
-		case 'title':
-		  $replacements[$original] = $sanitize ? filter_xss($data['service']->label) : $data['service']->label;
-		  break;
-	  }
-	}
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+      case 'title':
+        $replacements[$original] = $sanitize ? filter_xss($data['service']->label) : $data['service']->label;
+        break;
+      }
+    }
   }
-
   return $replacements;
 }
 

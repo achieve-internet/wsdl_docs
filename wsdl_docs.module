@@ -68,7 +68,7 @@ function wsdl_docs_menu() {
     'page arguments' => array('wsdl_docs_form'),
     'access arguments' => array('access administration pages'),
     'type' => MENU_NORMAL_ITEM,
-    'description'=> 'WSDL docs',
+    'description' => 'WSDL docs',
     'weight' => -99,
   );
   // Add a WSDL service.
@@ -78,7 +78,7 @@ function wsdl_docs_menu() {
     'page arguments' => array('wsclient_service', NULL, 'add'),
     'access callback' => 'entity_access',
     'access arguments' => array('create', 'wsclient_service'),
-    'description'=> "Import WSDL files to create docs for your SOAP services",
+    'description' => "Import WSDL files to create docs for your SOAP services",
     'type' => MENU_LOCAL_ACTION,
   );
   return $items;
@@ -275,7 +275,7 @@ function wsdl_docs_create_wsclient_service_upload($name, $filename) {
  *   wsclient_service entity.
  * @param object $DOMDocument
  */
-function wsdl_docs_update_wsclient_service($service, $DOMDocument = null) {
+function wsdl_docs_update_wsclient_service($service, $DOMDocument = NULL) {
   // Check if file is wsdl/xsd or zip file
   $endpoint = $service->endpoint();
   // Rebuild types and operations in service.
@@ -379,7 +379,7 @@ function wsdl_docs_update_service_operations($service, $DOMDocument) {
           $documentations[$operation_name] = $documentation[0]->nodeValue;
         }
       }
-      // For output (step 1): parsing correct output like WSDL viewer is multi step process. 
+      // For output (step 1): parsing correct output like WSDL viewer is multi step process.
       $message = $operation->getElementsByTagName('output')[0]->getAttribute('message');
       // Remove "tns:" namespace so we can parse the element.
       $message = _wsdl_docs_rem_namespace($message);
@@ -609,16 +609,16 @@ function wsdl_docs_wsclient_service_form_submit($form, &$form_state) {
     $service = entity_load_single('wsclient_service', $service_id);
     // Create or update operations.
     wsdl_docs_update_wsclient_service($service);
-	if (module_exists('pathauto')) {
-	  // Create path alias  for wsdl service
-	  $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
-	  if(!$path) {
-		global $language;
-		watchdog('wsdl_docs', '<pre>' . print_r($service, 1) . '</pre>');
-		module_load_include('inc', 'pathauto');
-		pathauto_create_alias('wsdl_docs', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'wsdl_docs', $language->language);
-	  }
-	}
+    if (module_exists('pathauto')) {
+      // Create path alias  for wsdl service
+      $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
+      if (!$path) {
+      global $language;
+      watchdog('wsdl_docs', '<pre>' . print_r($service, 1) . '</pre>');
+      module_load_include('inc', 'pathauto');
+      pathauto_create_alias('wsdl_docs', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'wsdl_docs', $language->language);
+      }
+    }
     // Add redirect to our list.
     if ($form['#action'] == '/admin/content/wsdl_docs/add') {
       $form_state['redirect'] = 'admin/content/wsdl_docs';
@@ -676,9 +676,9 @@ function wsdl_docs_node_view($node, $view_mode, $langcode) {
       $link = '';
       if (substr($service->url, 0, 7) != 'private') {
         $url = 'https://services.w3.org/xslt?xslfile=http://tomi.vanek.sk/xml/wsdl-viewer.xsl&amp;xmlfile=' . $service->url;
-        $link = l('View WSDL', $url);
+        $link = l(t('View WSDL'), $url);
       }
-      $raw_wsdl_link = l('View raw WSDL XML', $service->url);
+      $raw_wsdl_link = l(t('View raw WSDL XML'), $service->url);
       $node->content['apiform'] = array(
         '#markup' => '<span class="wsdl-viewer">' . $link . '</span><br><span class="wsdl-file">' . $raw_wsdl_link . '</span>' . drupal_render($form),
         '#weight' => 100,
@@ -738,20 +738,18 @@ function wsdl_docs_views_pre_render(&$view) {
  */
 function wsdl_docs_token_info() {
   $types['wsdl_docs'] = array(
-	'name' => t("Wsdl service"),
-	'description' => t("Wsdl service."),
+    'name' => t("Wsdl service"),
+    'description' => t("Wsdl service."),
   );
-
   $wsdl['title'] = array(
-	'name' => t("Wsdl service name"),
-	'description' => t("Token for service name"),
+    'name' => t("Wsdl service name"),
+    'description' => t("Token for service name"),
   );
-
   return array(
-	'types' => $types,
-	'tokens' => array(
-	  'wsdl_docs' => $wsdl
-	),
+    'types' => $types,
+    'tokens' => array(
+      'wsdl_docs' => $wsdl
+    ),
   );
 }
 
@@ -774,7 +772,7 @@ function wsdl_docs_tokens($type, $tokens, array $data = array(), array $options 
 }
 
 /**
- * Implements hook_pathauto.
+ * Implements hook_pathauto().
  */
 function wsdl_docs_pathauto($op) {
   $settings = new stdClass();

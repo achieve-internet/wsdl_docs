@@ -192,7 +192,7 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
   }
   $timer_duration = $timer_before - microtime();
   $element = $form['transaction'];
-  
+
   // Place the trace data into the display.
   if ($service->type == 'rest') {
     $operation = $service->operations[$operation['name']];
@@ -374,7 +374,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
   }
   else {
     // A textfield will normally do for any other primitives.
-    if (isset ($required)){
+    if (isset($required)) {
       if ($required == 'true') {
         return array(
           '#type' => 'textfield',
@@ -506,6 +506,9 @@ function wsdl_docs_node_load_by_title($title, $node_type) {
 }
 
 /**
+ * Create a new WSDL Docs service via REST.
+ * Will need to add the reference to the WSDL/XSD documentation in a separate PUT/POST.
+ *
  * @param array $data
  *  Array of body data passed via POST
  * @return string
@@ -530,6 +533,8 @@ function _wsdl_docs_service_create($data) {
 }
 
 /**
+ * Update an existing WSDL Docs service via REST PUT.
+ *
  * @param string $name
  *  Name of the WSDL Docs service being updated
  * @param array $data
@@ -556,6 +561,8 @@ function _wsdl_docs_service_update($name, $data) {
 }
 
 /**
+ * Delete WSDL Docs service via REST DELETE.
+ *
  * @param $name
  *  Name of the WSDL Docs service being deleted
  * @param $data
@@ -573,6 +580,8 @@ function _wsdl_docs_service_delete($name) {
 }
 
 /**
+ * Given a WSDL Doc service, get its ID.
+ *
  * @param string $name
  *  Name of the WSDL Docs service being updated
  * @param string $url
@@ -592,6 +601,8 @@ function _wsdl_docs_get_service_id($name) {
 }
 
 /**
+ * Import file(s) to an existing WSDL Doc service via REST POST.
+ *
  * @param $name
  *  Name of the WSDL Docs service being updated/created
  * @return mixed|string
@@ -636,7 +647,7 @@ function _wsdl_docs_service_import($name) {
     if ($key == 0) {
       $tmp = explode(".", $file['name']);
       $ext = array_pop($tmp);
-      $tmp_filename = WSDL_DIRECTORY . $service->name . '-' .  $service->id . '.' . $ext;
+      $tmp_filename = WSDL_DIRECTORY . $service->name . '-' . $service->id . '.' . $ext;
       $main_filename = $tmp_filename;
     }
     // For any additional files, keep the name the same so references from

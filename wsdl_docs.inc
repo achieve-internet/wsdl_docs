@@ -627,17 +627,13 @@ function _wsdl_docs_service_import($name) {
 
   // First, confirm file(s) of correct extension.
   foreach ($_FILES['files'] as $key => $file) {
-    $tmp = explode(".", $file['name']);
-    $ext = array_pop($tmp);
-    if (!in_array($ext, array('xsd', 'wsdl'))) {
+    $ext = pathinfo($file['name']);
+    if (!in_array($ext['extension'], array('xsd', 'wsdl'))) {
       return t('incorrect file format');
     }
   }
 
   // Second, save file to selected directory.
-  // @todo - do we want to save each set of files in a subdirectory that is the
-  // service name and id to make sure we don't get overwriting of files with the
-  // same name?
   $directory = WSDL_DIRECTORY;
   file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
   foreach ($_FILES['files'] as $key => $file) {
@@ -645,9 +641,8 @@ function _wsdl_docs_service_import($name) {
     // For the main WSDL/XSD file that refers to other files, name it
     // [service name]-[service id].wsdl or .xsd, depending on file's extension.
     if ($key == 0) {
-      $tmp = explode(".", $file['name']);
-      $ext = array_pop($tmp);
-      $tmp_filename = WSDL_DIRECTORY . $service->name . '-' . $service->id . '.' . $ext;
+      $ext = pathinfo($file['name']);
+      $tmp_filename = WSDL_DIRECTORY . $service->name . '-' . $service->id . '.' . $ext['extension'];
       $main_filename = $tmp_filename;
     }
     // For any additional files, keep the name the same so references from

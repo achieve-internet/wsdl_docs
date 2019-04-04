@@ -610,13 +610,13 @@ function wsdl_docs_wsclient_service_form_submit($form, &$form_state) {
     // Create or update operations.
     wsdl_docs_update_wsclient_service($service);
     if (module_exists('pathauto')) {
-      // Create path alias  for wsdl service
+      // Create path alias for wsdl service.
       $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
       if (!$path) {
-      global $language;
-      watchdog('wsdl_docs', '<pre>' . print_r($service, 1) . '</pre>');
-      module_load_include('inc', 'pathauto');
-      pathauto_create_alias('wsdl_docs', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'wsdl_docs', $language->language);
+        global $language;
+        watchdog('wsdl_docs', '<pre>' . print_r($service, 1) . '</pre>');
+        module_load_include('inc', 'pathauto');
+        pathauto_create_alias('wsdl_docs', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'wsdl_docs', $language->language);
       }
     }
     // Add redirect to our list.
@@ -738,12 +738,12 @@ function wsdl_docs_views_pre_render(&$view) {
  */
 function wsdl_docs_token_info() {
   $types['wsdl_docs'] = array(
-    'name' => t("Wsdl service"),
-    'description' => t("Wsdl service."),
+    'name' => t('Wsdl service'),
+    'description' => t('Wsdl service.'),
   );
   $wsdl['title'] = array(
-    'name' => t("Wsdl service name"),
-    'description' => t("Token for service name"),
+    'name' => t('Wsdl service name'),
+    'description' => t('Token for service name'),
   );
   return array(
     'types' => $types,

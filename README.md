@@ -64,13 +64,13 @@ Note: Use HTTP Basic Auth for these APIs (Username/password is the credentials f
 -H 'Content-Type: application/json' \
 -d '{"url": "https://graphical.weather.gov/xml/DWMLgen/wsdl/ndfdXML.wsdl"}'`
 #### Import a WSDL file(s) to an Existing Service by WSDL file
-This example shows how to import 2 files. You may import as many as you like, just be sure to increment 'x' for each file: soap_api_definition[x]. The first file i.e. soap_api_definition[0] should be the main file that makes any references to additional files. 
+For importing multiple files, be sure the first file in the list is the main file that makes any references to additional files. 
 
 `curl -X POST [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl-doc-machine-name]/import \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ=' \
 -H 'content-type: multipart/form-data' \
--F 'soap_api_definition[0]=@[path-to-wsdl-1]'
--F 'soap_api_definition[1]=@[path-to-wsdl-2]'`
+-F 'soap_api_definition[]=@[path-to-wsdl-1]'
+-F 'soap_api_definition[]=@[path-to-wsdl-2]'`
 #### Delete a WSDL Doc Service and its Operations
 `curl -X DELETE [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl-doc-machine-name] \
 -H 'Authorization: Basic c2VydmljZXMtYWRtaW46cGFzc3dvcmQ='`

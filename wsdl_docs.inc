@@ -636,11 +636,26 @@ function _wsdl_docs_service_import($name) {
   // Second, save file to selected directory.
   $directory = WSDL_DIRECTORY;
   file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+  $i = 0;
+  $multiple_files = (count($_FILES['files']) > 1 ? true : false);
+  // Also prepare to zip up multiple files for download via admin screen.
+  if ($multiple_files) {
+    $zip_filename = WSDL_DIRECTORY . $service->name . '-' . $service->id . '.zip';
+    fopen(drupal_realpath($zip_filename), 'w');
+    try {
+      $zip = new ArchiverZip(drupal_realpath($zip_filename));
+    }
+    catch (Exception $e) {
+      return ('Error: ' . $e->getMessage());
+    }
+  }
+  // Save individual file(s) as well as add to zip if multiple files provided.
   foreach ($_FILES['files'] as $key => $file) {
     $wsdl = file_get_contents($file['tmp_name']);
     // For the main WSDL/XSD file that refers to other files, name it
     // [service name]-[service id].wsdl or .xsd, depending on file's extension.
-    if ($key == 0) {
+    // We are assuming this file has been provided first in the list of files to import.
+    if ($i == 0) {
       $ext = pathinfo($file['name']);
       $tmp_filename = WSDL_DIRECTORY . $service->name . '-' . $service->id . '.' . $ext['extension'];
       $main_filename = $tmp_filename;
@@ -651,6 +666,11 @@ function _wsdl_docs_service_import($name) {
       $tmp_filename = WSDL_DIRECTORY . $file['name'];
     }
     file_unmanaged_save_data($wsdl, $tmp_filename, FILE_EXISTS_REPLACE);
+    if (isset($zip)) {
+      $zip->add(drupal_realpath($tmp_filename));
+    }
+    // Increment counter as we only rename the first file passed in the request.
+    $i++;
   }
 
   // Third, save path of file to existing WSDL service entity.
@@ -668,7 +688,7 @@ function _wsdl_docs_service_import($name) {
     wsdl_docs_update_wsclient_service($service, $DOMDocument);
   }
   else {
-    return 'When importing files you must include a file keyed as soap_api_definition[0]';
+    return 'Error importing files.';
   }
   return "WSDL Doc: $name, id: $service_id updated.";
 }

@@ -714,7 +714,19 @@ function wsdl_docs_form($form, &$form_state) {
       $username = 'REST import';
     }
     $created = date('l m-d-Y H:i:s', $service->created);
-    $row = array($row[0], $row[1], $username, $created, $row[2], $row[4]);
+
+    // Add link to download zip (if available).
+    // Get length of service url file's extension.
+    $ext = pathinfo($service->url);
+    $ext_length = strlen($ext['extension']);
+    // Strip those characters from the service url file's name, then append '.zip'.
+    $zip_filename = (substr( $service->url, 0, (-1 * $ext_length))) . 'zip';
+    $zip_link = '';
+    // If a zip file exists that matches, add a link to the zip in the admin screen.
+    if (file_exists($zip_filename)) {
+      $zip_link = l(t('Download zip of files'), file_create_url($zip_filename));
+    }
+    $row = array($row[0], $row[1], $username, $created, $row[2], $row[4], $zip_link);
   }
 
   return $form;

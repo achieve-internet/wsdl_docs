@@ -701,7 +701,7 @@ function wsdl_docs_node_view($node, $view_mode, $langcode) {
 function wsdl_docs_form($form, &$form_state) {
   $form = drupal_get_form('wsclient_service_overview_form', 'wsclient_service');
   $h = $form['table']['#header'];
-  $form['table']['#header'] = array($h[0], $h[1], 'User', 'Created', $h[2]);
+  $form['table']['#header'] = array($h[0], $h[1], 'User', 'Created', $h[2], 'Download file(s)');
   $form['table']['#header'][4]['colspan'] -= 2;
   foreach ($form['table']['#rows'] as &$row) {
     $service = $row[0]['data']['#url']['options']['entity'];
@@ -725,10 +725,12 @@ function wsdl_docs_form($form, &$form_state) {
     $ext_length = strlen($ext['extension']);
     // Strip those characters from the service url file's name, then append '.zip'.
     $zip_filename = (substr( $service->url, 0, (-1 * $ext_length))) . 'zip';
-    $zip_link = '';
     // If a zip file exists that matches, add a link to the zip in the admin screen.
     if (file_exists($zip_filename)) {
-      $zip_link = l(t('Download zip of files'), file_create_url($zip_filename));
+      $zip_link = l(t('archive of multiple files'), file_create_url($zip_filename));
+    }
+    else {
+      $zip_link = l(t('single file'), file_create_url($service->url));
     }
     $row = array($row[0], $row[1], $username, $created, $row[2], $row[4], $zip_link);
   }

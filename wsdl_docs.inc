@@ -175,7 +175,7 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
     // disable cache when testing!
     $service->settings['options']['cache_wsdl'] = WSDL_CACHE_NONE;
   }
-  
+
   // Ready to actually invoke the call
   $timer_before = microtime();
   try {
@@ -187,8 +187,7 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
     }
   }
   catch (Exception $e) {
-    //$response = $e->getMessage();
-    drupal_set_message("<pre>Catch Exception - " . $e->getMessage() . "</pre>");
+    drupal_set_message('<pre>' . t('Catch Exception - ') . $e->getMessage() . '</pre>');
   }
   $timer_duration = $timer_before - microtime();
   $element = $form['transaction'];
@@ -624,32 +623,27 @@ function _wsdl_docs_service_import($name) {
       $_FILES['files'][$key][$file_key] = $value;
     }
   }
-
-  // First, confirm file(s) of correct extension.
+  // Confirm imported file(s) are of correct extension(s).
   foreach ($_FILES['files'] as $key => $file) {
     $ext = pathinfo($file['name']);
     if (!in_array($ext['extension'], array('xsd', 'wsdl'))) {
       return t('incorrect file format');
     }
   }
-
-  // Second, save file to selected directory.
+  // Save file(s) to selected directory.
   $directory = WSDL_DIRECTORY;
   file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
-  $i = 0;
-  $multiple_files = (count($_FILES['files']) > 1 ? true : false);
-  // Also prepare to zip up multiple files for download via admin screen.
+  $multiple_files = (count($_FILES['files']) > 1 ? TRUE : FALSE);
+  // Prepare to zip up multiple files for download from admin/content/wsdl_docs.
   if ($multiple_files) {
-    $zip_filename = WSDL_DIRECTORY . $service->name . '-' . $service->id . '.zip';
+    $zip = new ZipArchive();
+    $zip_filename = $service->name . '-' . $service->id . '.zip';
+    $path = drupal_realpath($directory) . '/' . $zip_filename;
     fopen(drupal_realpath($zip_filename), 'w');
-    try {
-      $zip = new ArchiverZip(drupal_realpath($zip_filename));
-    }
-    catch (Exception $e) {
-      return ('Error: ' . $e->getMessage());
-    }
+    $zip->open($path, ZipArchive::CREATE);
   }
-  // Save individual file(s) as well as add to zip if multiple files provided.
+  // Save individual file(s) as well as add to zip if multiple files imported.
+  $i = 0;
   foreach ($_FILES['files'] as $key => $file) {
     $wsdl = file_get_contents($file['tmp_name']);
     // For the main WSDL/XSD file that refers to other files, name it
@@ -666,14 +660,14 @@ function _wsdl_docs_service_import($name) {
       $tmp_filename = WSDL_DIRECTORY . $file['name'];
     }
     file_unmanaged_save_data($wsdl, $tmp_filename, FILE_EXISTS_REPLACE);
-    if (isset($zip)) {
-      $zip->add(drupal_realpath($tmp_filename));
+    // For multiple files, add this file to the zip.
+    if ($multiple_files) {
+      $zip->addFromString($file['name'], $wsdl);
     }
     // Increment counter as we only rename the first file passed in the request.
     $i++;
   }
-
-  // Third, save path of file to existing WSDL service entity.
+  // Save path of file to existing WSDL service entity.
   if (isset($main_filename)) {
     $service->url = $main_filename;
     $service->save();
@@ -684,7 +678,6 @@ function _wsdl_docs_service_import($name) {
       return 'ERROR input file is not XML';
     }
     // Update existing service with new specs per file upload.
-    // @todo - this only needs to be run on the main file, correct?
     wsdl_docs_update_wsclient_service($service, $DOMDocument);
   }
   else {

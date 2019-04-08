@@ -191,10 +191,12 @@ function wsdl_docs_services_resources() {
 
 /**
  * Update existing WSDL service.
+ * @todo should this be moved in to the .inc file?
  *
  * @param object $service
  *   wsclient_service entity.
  * @param object $DOMDocument
+ * @throws \Exception
  */
 function wsdl_docs_update_wsclient_service($service, $DOMDocument = NULL) {
   // Check if file is wsdl/xsd.
@@ -202,9 +204,6 @@ function wsdl_docs_update_wsclient_service($service, $DOMDocument = NULL) {
   // Rebuild types and operations in service.
   $endpoint->initializeMetadata(TRUE);
   $service->save();
-  // @todo - i think this should get added a separate call in the functions
-  // using wsdl_docs_update_wsclient_service - it is confusing to update the service
-  // and then nest updating of the operations in the service update function.
   // Create or update operations nodes.
   wsdl_docs_update_service_operations($service, $DOMDocument);
   rules_clear_cache();
@@ -224,6 +223,7 @@ function _wsdl_docs_rem_namespace($str) {
 
 /**
  * Custom function to get_output.
+ * Called in step 4 of wsdl_docs_update_service_operations().
  *
  * @param string $operation_name
  *   Name of service operation.
@@ -272,10 +272,10 @@ function _wsdl_docs_get_output($operation_name, &$_outputs_messages, &$_messages
  * After WSDL service has been updated with a different URL or file describing the SOAP resource,
  * update all of its operation nodes accordingly.
  *
- * @todo - do the old operation nodes get deleted too?
  * @param object $service
  *   wsclient_service entity.
  * @param object $DOMDocument
+ * @throws \Exception
  */
 function wsdl_docs_update_service_operations($service, $DOMDocument) {
   global $user;
@@ -450,16 +450,14 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
     }
   }
   $form = $new_form;
-
   // Determine if this is an existing service being edited.
   // If not, hide some fields to minimize confusion.
   $existing_service = TRUE;
   if (isset($form_state['wsclient_service']->is_new) && $form_state['wsclient_service']->is_new == 1) {
     $existing_service = FALSE;
   }
-
   if ($existing_service) {
-    // Hide the fields
+    // Hide the fields.
     $form['operations']['#access'] = FALSE;
     $form['datatypes']['#access'] = FALSE;
     $form['global_parameters']['#access'] = FALSE;
@@ -469,11 +467,10 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
     $form['type']['#default_value'] = 'soap';
     $form['type']['#access'] = FALSE;
   }
-
-  // replace the wsclient_ui_element_url_validate function
+  // Replace the wsclient_ui_element_url_validate function.
   $form['url']['#element_validate'][0] = 'wsdl_docs_wsclient_ui_element_url_validate';
   $form['#validate'][] = 'wsdl_docs_wsclient_service_form_validate';
-  // update operations nodes after save service
+  // Update operations nodes after save service.
   $form['#submit'][] = 'wsdl_docs_wsclient_service_form_submit';
 }
 
@@ -510,7 +507,7 @@ function wsdl_docs_wsclient_service_form_validate($form, $form_state) {
       // WARNING: if you have the xdebug PHP module enabled this can cause a
       // fatal error on invalid WSDL files (instead of a catchable SoapFault
       // exception).
-      // xdebug_disable();
+//       xdebug_disable();
       @$endpoint = new SOAPClient($form_state['values']['url']);
     }
     catch (SoapFault $e) {

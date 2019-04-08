@@ -37,16 +37,6 @@ function wsdl_docs_permission() {
 }
 
 /**
- * Implements hook_menu_alter().
- *
- * @todo Hide default webservice menu because it could confuse users, if we make this contrib may want to remove this or make it conditional.
- *
- */
-//function wsdl_docs_menu_alter(&$items) {
-//  $items['admin/config/services']['access callback'] = FALSE;
-//}
-
-/**
  * Publish our testing UI and ajax callbacks.
  *
  * Implements hook_menu().
@@ -54,7 +44,8 @@ function wsdl_docs_permission() {
 function wsdl_docs_menu() {
   // Page for deleting a WSDL service.
   $items['wsdl_docs/%/delete'] = array(
-    'page callback' => 'wsdl_docs_service_delete',
+    'page callback' => '_wsdl_docs_service_delete',
+    'file' => 'wsdl_docs.inc',
     'delivery callback' => 'drupal_json_output',
     'access callback' => 'wsdl_docs_basic_auth',
     'access arguments' => array(
@@ -81,7 +72,7 @@ function wsdl_docs_menu() {
     'page arguments' => array('wsclient_service', NULL, 'add'),
     'access callback' => 'entity_access',
     'access arguments' => array('create', 'wsclient_service'),
-    'description' => "Import WSDL files to create docs for your SOAP services",
+    'description' => 'Import WSDL files to create docs for your SOAP services',
     'type' => MENU_LOCAL_ACTION,
   );
   return $items;
@@ -196,27 +187,6 @@ function wsdl_docs_services_resources() {
       ),
     ),
   );
-}
-
-/**
- * FAPI page callback.
- * @todo this is very similar to _wsdl_docs_service_delete in .inc file - combine?
- */
-function wsdl_docs_service_delete() {
-  // Get service id by service name.
-  $service_id = db_select('wsclient_service', 'ws')
-    ->fields('ws', array('id'))
-    ->condition('ws.label', arg(1))
-    ->execute()
-    ->fetchField();
-  // If service exists.
-  if (is_numeric($service_id)) {
-    // Delete the service
-    entity_delete('wsclient_service', $service_id);
-    return 'The service has been deleted.';
-  }
-
-  return 'ERROR the service name parameter';
 }
 
 /**

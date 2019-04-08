@@ -664,9 +664,10 @@ function _wsdl_docs_service_import($name) {
       }
       $tmp_filename = WSDL_DIRECTORY . $file['name'];
     }
-    // Validate wsdl before saving.
-    _wsdl_docs_validate_wsdl($tmp_filename);
     file_unmanaged_save_data($wsdl, $tmp_filename, FILE_EXISTS_REPLACE);
+    // Validate main wsdl after saving. If not valid, delete.
+    // Additional wsdl files won't validate if they require the main file.
+    _wsdl_docs_validate_wsdl($main_filename);
     // For multiple files, add this file to the zip.
     if ($multiple_files) {
       $zip->addFromString($file['name'], $wsdl);
@@ -715,10 +716,11 @@ function _wsdl_docs_validate_wsdl($url) {
     // fatal error on invalid WSDL files (instead of a catchable SoapFault
     // exception).
     // xdebug_disable();
-    @$endpoint = new SOAPClient(drupal_realpath($url));
+    @$endpoint = new SOAPClient($url);
   }
   catch (SoapFault $e) {
     $error = $e->getMessage();
+    file_unmanaged_delete($url);
     return "Error parsing the WSDL file: $error";
   }
   return NULL;

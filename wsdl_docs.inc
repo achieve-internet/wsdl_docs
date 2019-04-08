@@ -658,6 +658,10 @@ function _wsdl_docs_service_import($name) {
     // For any additional files, keep the name the same so references from
     // the main file still work.
     else {
+      // Confirm file name isn't a path to some other directory/file elsewhere in the system.
+      if (strpos($file['name'], '/')) {
+        return "Not a valid file name.";
+      }
       $tmp_filename = WSDL_DIRECTORY . $file['name'];
     }
     // Validate wsdl before saving.

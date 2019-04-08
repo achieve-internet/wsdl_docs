@@ -548,7 +548,7 @@ function _wsdl_docs_service_update($name, $data) {
     // Update existing WSDL service's URL.
     $service->url = $data['url'];
     // Validate wsdl before saving.
-    _wsdl_docs_validate_wsdl(drupal_realpath($service->url));
+    _wsdl_docs_validate_wsdl($service->url);
     $service->save();
     // update WSDL service's operation nodes
     $wsdl = file_get_contents($data['url']);
@@ -661,7 +661,7 @@ function _wsdl_docs_service_import($name) {
       $tmp_filename = WSDL_DIRECTORY . $file['name'];
     }
     // Validate wsdl before saving.
-    _wsdl_docs_validate_wsdl(drupal_realpath($tmp_filename));
+    _wsdl_docs_validate_wsdl($tmp_filename);
     file_unmanaged_save_data($wsdl, $tmp_filename, FILE_EXISTS_REPLACE);
     // For multiple files, add this file to the zip.
     if ($multiple_files) {

@@ -547,13 +547,12 @@ function _wsdl_docs_service_update($name, $data) {
     $service = entity_load_single('wsclient_service', $service_id);
     // Update existing WSDL service's URL.
     $service->url = $data['url'];
-    // Validate wsdl before saving.
-    _wsdl_docs_validate_wsdl($service->url);
     $service->save();
     // update WSDL service's operation nodes
     $wsdl = file_get_contents($data['url']);
     $DOMDocument = new DOMDocument();
     $DOMDocument->loadXML($wsdl);
+    // Validation of WSDL is performed in this next step.
     wsdl_docs_update_wsclient_service($service, $DOMDocument);
     return "UPDATE SERVICE: $name, ID: $service_id";
   }

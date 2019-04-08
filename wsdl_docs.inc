@@ -547,6 +547,8 @@ function _wsdl_docs_service_update($name, $data) {
     $service = entity_load_single('wsclient_service', $service_id);
     // Update existing WSDL service's URL.
     $service->url = $data['url'];
+    // Validate wsdl before saving.
+    _wsdl_docs_validate_wsdl(drupal_realpath($service->url));
     $service->save();
     // update WSDL service's operation nodes
     $wsdl = file_get_contents($data['url']);
@@ -658,6 +660,8 @@ function _wsdl_docs_service_import($name) {
     else {
       $tmp_filename = WSDL_DIRECTORY . $file['name'];
     }
+    // Validate wsdl before saving.
+    _wsdl_docs_validate_wsdl(drupal_realpath($tmp_filename));
     file_unmanaged_save_data($wsdl, $tmp_filename, FILE_EXISTS_REPLACE);
     // For multiple files, add this file to the zip.
     if ($multiple_files) {
@@ -683,4 +687,35 @@ function _wsdl_docs_service_import($name) {
     return 'Error importing files.';
   }
   return "WSDL Doc: $name, id: $service_id updated.";
+}
+
+/**
+ * Validates that the URL (either local path to file or external URL)
+ * points to a valid WSDL file.
+ *
+ * This was taken from wsclient_soap.module so validation may be run twice,
+ * but wanted to validate WSDL before writing the file to the private directory.
+ *
+ * @param $url
+ *  path to local wsdl file imported by PUT or remote URL
+ *
+ * @return string|null
+ *  Error if exception is caught, null if no exception.
+ */
+function _wsdl_docs_validate_wsdl($url) {
+  // The url has to point to a valid WSDL file.
+  try {
+    // If initializing the SOAPClient succeeds we're good, otherwise we catch
+    // the exception below and suppress any further warnings.
+    // WARNING: if you have the xdebug PHP module enabled this can cause a
+    // fatal error on invalid WSDL files (instead of a catchable SoapFault
+    // exception).
+    // xdebug_disable();
+    @$endpoint = new SOAPClient(drupal_realpath($url));
+  }
+  catch (SoapFault $e) {
+    $error = $e->getMessage();
+    return "Error parsing the WSDL file: $error";
+  }
+  return NULL;
 }

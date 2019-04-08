@@ -30,7 +30,7 @@ function wsdl_docs_permission() {
     'use wsdl docs services' => array(
       'title' => t('WSDL Docs Operations using Services module'),
     ),
-    'download wsld xsd files' => array(
+    'download wsdl xsd files' => array(
       'title' => t('Download WSDL and XSD documents as displayed on operation nodes'),
     )
   );
@@ -776,10 +776,10 @@ function wsdl_docs_views_pre_view(&$view, &$display_id, &$args) {
  */
 function wsdl_docs_file_download($uri) {
   $path_elements = explode('/', $uri);
-  if (!in_array( WSDL_SUBDIR, $path_elements)) {
+  if (!in_array(WSDL_SUBDIR, $path_elements)) {
     return NULL;
   }
-  if (user_access('download wsld xsd files')) {
+  if (user_access('download wsdl xsd files')) {
     $file = file_uri_to_object($uri);
     return file_get_content_headers($file);
   }

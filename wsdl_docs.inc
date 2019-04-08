@@ -153,7 +153,6 @@ function get_reference_number($form, $form_state) {
  * Callback for the test from 'prepare' button.
  */
 function wsdl_docs_prepare_request_callback($form, $form_state) {
- // firep($form_state);
   $service = $form_state['build_info']['args'][0];
   $operation = $form_state['build_info']['args'][1];
 
@@ -187,7 +186,7 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
     }
   }
   catch (Exception $e) {
-    drupal_set_message('<pre>' . t('Catch Exception - ') . $e->getMessage() . '</pre>');
+    drupal_set_message(t('Exception: %e'), array('%e' => $e->getMessage()));
   }
   $timer_duration = $timer_before - microtime();
   $element = $form['transaction'];
@@ -633,7 +632,7 @@ function _wsdl_docs_service_import($name) {
   // Save file(s) to selected directory.
   $directory = WSDL_DIRECTORY;
   file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
-  $multiple_files = (count($_FILES['files']) > 1 ? TRUE : FALSE);
+  $multiple_files = (count($_FILES['files']) > 1);
   // Prepare to zip up multiple files for download from admin/content/wsdl_docs.
   if ($multiple_files) {
     $zip = new ZipArchive();

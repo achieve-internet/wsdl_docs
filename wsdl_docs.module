@@ -190,58 +190,6 @@ function wsdl_docs_services_resources() {
 }
 
 /**
- * Create WSDL service by providing URL of WSDL resource.
- *
- * @param string $url
- *   WSDL resource URL.
- * @param string $name
- *   WSDL service name.
- * @return object
- *   Returns wsclient_service entity.
- */
-function wsdl_docs_create_wsclient_service($url, $name = '') {
-  $service = entity_create('wsclient_service', array('type' => 'soap'));
-  // if name is not empty
-  if (!empty($name)) {
-    $service->label = $name;
-    $service->name = strtolower(str_replace('-', '_', str_replace(' ', '_', $name)));
-  }
-  // If name is empty then generate name.
-  else {
-    $service->label = 'Service ' . date('d-m-Y H:i:s');
-    $service->name = 'service_' . date('d_m_Y_H_i_s');
-  }
-  $service->url = $url;
-  $service->status = 1;
-  $service->save();
-  return $service;
-}
-
-/**
- * Create WSDL service by providing WSDL file.
- *
- * @param string $name
- *   WSDL service name.
- * @param string $filename
- *   Filename as service URL.
- * @return object
- *   Returns wsclient_service entity.
- */
-function wsdl_docs_create_wsclient_service_upload($name, $filename) {
-  $service = entity_create('wsclient_service', array('type' => 'soap'));
-  $service->label = $name;
-  $service->name = strtolower(str_replace('-', '_', str_replace(' ', '_', $name)));
-  // Set path to local file as WSDL resource URL.
-  // Files are provided by REST import only, not via the admin UI when creating a WSDL service entity.
-  $service->url = $filename;
-  // Disable cache WSDL.
-  $service->settings = array('options' => array('cache_wsdl' => WSDL_CACHE_NONE));
-  $service->status = 1;
-  $service->save();
-  return $service;
-}
-
-/**
  * Update existing WSDL service.
  *
  * @param object $service

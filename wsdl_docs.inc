@@ -609,6 +609,7 @@ function _wsdl_docs_get_service_id($name) {
  * @param $name
  *  Name of the WSDL Docs service being updated/created
  * @return mixed|string
+ * @throws \Exception
  */
 function _wsdl_docs_service_import($name) {
   // Get existing service ID.
@@ -634,7 +635,7 @@ function _wsdl_docs_service_import($name) {
       return t('incorrect file format');
     }
   }
-  // Save file(s) to selected directory.
+  // Prepare to save file(s) to selected directory.
   $directory = WSDL_DIRECTORY;
   file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
   $multiple_files = (count($_FILES['files']) > 1);
@@ -650,6 +651,14 @@ function _wsdl_docs_service_import($name) {
   $i = 0;
   foreach ($_FILES['files'] as $key => $file) {
     $wsdl = file_get_contents($file['tmp_name']);
+    // Perform basic XML validation.
+    $DOMDocument = _wsdl_docs_validate_xml($wsdl);
+    if ($DOMDocument) {
+      $tmp_filename = WSDL_DIRECTORY . $file['name'];
+    }
+    else {
+      return 'Invalid XML.';
+    }
     // For the main WSDL/XSD file that refers to other files, name it
     // [service name]-[service id].wsdl or .xsd, depending on file's extension.
     // We are assuming this file has been provided first in the list of files to import.
@@ -665,12 +674,8 @@ function _wsdl_docs_service_import($name) {
       if (strpos($file['name'], '/')) {
         return "Not a valid file name.";
       }
-      $tmp_filename = WSDL_DIRECTORY . $file['name'];
     }
     file_unmanaged_save_data($wsdl, $tmp_filename, FILE_EXISTS_REPLACE);
-    // Validate main wsdl after saving. If not valid, delete.
-    // Additional wsdl files won't validate if they require the main file.
-    _wsdl_docs_validate_wsdl($main_filename);
     // For multiple files, add this file to the zip.
     if ($multiple_files) {
       $zip->addFromString($file['name'], $wsdl);
@@ -678,18 +683,23 @@ function _wsdl_docs_service_import($name) {
     // Increment counter as we only rename the first file passed in the request.
     $i++;
   }
-  // Save path of file to existing WSDL service entity.
+  // Validate main WSDL after saving file(s). If not valid, delete.
+  // Additional wsdl files won't validate if they require the main file.
+  _wsdl_docs_validate_wsdl_file($main_filename);
+  // Save path of main/single file to existing WSDL service entity.
   if (isset($main_filename)) {
     $service->url = $main_filename;
     $service->save();
     $wsdl = file_get_contents($main_filename);
     $DOMDocument = new DOMDocument();
     $loaded = $DOMDocument->loadXML($wsdl);
-    if (!$loaded) {
-      return 'ERROR input file is not XML';
+    if ($loaded) {
+      // Update existing service with new specs per file upload.
+      wsdl_docs_update_wsclient_service($service, $DOMDocument);
     }
-    // Update existing service with new specs per file upload.
-    wsdl_docs_update_wsclient_service($service, $DOMDocument);
+    else {
+      return 'Invalid XML.';
+    }
   }
   else {
     return 'Error importing files.';
@@ -698,11 +708,10 @@ function _wsdl_docs_service_import($name) {
 }
 
 /**
- * Validates that the URL (either local path to file or external URL)
- * points to a valid WSDL file.
+ * Validates that the local path to file points to a valid WSDL file.
  *
  * This was taken from wsclient_soap.module so validation may be run twice,
- * but wanted to validate WSDL before writing the file to the private directory.
+ * but wanted to delete file saved to file system if WSDL doesn't validate.
  *
  * @param $url
  *  path to local wsdl file imported by PUT or remote URL
@@ -710,7 +719,7 @@ function _wsdl_docs_service_import($name) {
  * @return string|null
  *  Error if exception is caught, null if no exception.
  */
-function _wsdl_docs_validate_wsdl($url) {
+function _wsdl_docs_validate_wsdl_file($url) {
   // The url has to point to a valid WSDL file.
   try {
     // If initializing the SOAPClient succeeds we're good, otherwise we catch
@@ -730,7 +739,7 @@ function _wsdl_docs_validate_wsdl($url) {
 }
 
 /**
- * Validate xml and create DOMDocument object if valid
+ * Validate XML and create DOMDocument object if valid
  * @param string $wsdl
  *  xml loaded from wsdl/xsd file
  *

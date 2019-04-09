@@ -543,17 +543,21 @@ function _wsdl_docs_service_create($data) {
 function _wsdl_docs_service_update($name, $data) {
   $service_id = _wsdl_docs_get_service_id($name);
   if (is_numeric($service_id)) {
-    // load existing WSDL service
+    // Create DOMDocument object if XML validates.
+    $wsdl = file_get_contents($data['url']);
+    $DOMDocument = _wsdl_docs_validate_xml($wsdl);
+    if (!$DOMDocument) {
+      return 'Invalid XML.';
+    }
+    // Load existing WSDL service.
     $service = entity_load_single('wsclient_service', $service_id);
     // Update existing WSDL service's URL.
     $service->url = $data['url'];
     $service->save();
     // update WSDL service's operation nodes
-    $wsdl = file_get_contents($data['url']);
-    $DOMDocument = new DOMDocument();
-    $DOMDocument->loadXML($wsdl);
-    // Validation of WSDL is performed in this next step.
-    wsdl_docs_update_wsclient_service($service, $DOMDocument);
+    if ($DOMDocument) {
+      wsdl_docs_update_wsclient_service($service, $DOMDocument);
+    }
     return "UPDATE SERVICE: $name, ID: $service_id";
   }
   return "WSDL Doc not updated. No WSDL Doc matching the name and resource url was found.";
@@ -723,4 +727,25 @@ function _wsdl_docs_validate_wsdl($url) {
     return "Error parsing the WSDL file: $error";
   }
   return NULL;
+}
+
+/**
+ * Validate xml and create DOMDocument object if valid
+ * @param string $wsdl
+ *  xml loaded from wsdl/xsd file
+ *
+ * @return \DOMDocument|FALSE
+ *  returns loaded DOMDocument object if XML validates, FALSE if invalid.
+ */
+function _wsdl_docs_validate_xml($wsdl) {
+  $DOMDocument = new DOMDocument();
+  // Validate XML when loading.
+  libxml_use_internal_errors(true);
+  $DOMDocument->loadXML($wsdl);
+  $errors = libxml_get_errors();
+  if (!empty($errors)) {
+    return FALSE;
+  }
+  libxml_clear_errors();
+  return $DOMDocument;
 }

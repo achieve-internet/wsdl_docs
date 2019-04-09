@@ -132,7 +132,7 @@ function wsdl_docs_operation_invoke($form, $form_state, $service, $operation) {
  * FAPI form used to display all services that are managed.
  */
 function wsdl_docs_services_viewer($form, $form_state) {
-  drupal_set_title(t("Web Services"));
+  drupal_set_title(t('Web Services'));
 
     // @todo: Find and list all published services
     return $form;
@@ -215,7 +215,7 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
     $_SESSION['lastResponse'] = $service->endpoint()->client()->__getLastResponse();
   }
 
-  $element['#value'] = t("Ran at %time, took %duration to execute", array(
+  $element['#value'] = t('Ran at %time, took %duration to execute', array(
     '%time' => time(),
     '%duration' => $timer_duration,
   ));
@@ -282,7 +282,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
     foreach ($datatype['property info'] as $field_id => $field_info) {
       // Recurse and get each bit to render its own input element.
       //pre-populate fields with developer data
-      if ($field_id == "timeStamp") {
+      if ($field_id == 'timeStamp') {
         $dt = new DateTime();
         $dt->setTimeZone(new DateTimeZone('UTC'));
         $timeStamp = $dt->format('c');
@@ -302,7 +302,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
     $actual_type = $matches[1];
     $element = array(
       '#type' => 'fieldset',
-      '#title' => t("List of %label (%type)", array('%label' => $label, '%type' => $type)),
+      '#title' => t('List of %label (%type)', array('%label' => $label, '%type' => $type)),
       '#collapsible' => TRUE,
     );
     for ($field_id = 0; $field_id < 3; $field_id++) {
@@ -315,7 +315,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
   elseif ($type == 'text_formatted') {
     return array(
       '#type' => 'textarea',
-      '#title' => t("Property: %label", array('%label' => $label)),
+      '#title' => t('Property: %label', array('%label' => $label)),
       '#default_value' => $data,
       '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
     );
@@ -325,7 +325,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       if ($required == 'true') {
         return array(
           '#type' => 'select',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#default_value' => $data,
           // Defining false first so it's the default when setting up a form.
           '#options' => array('0' => 'false', '1' => 'true', '' => '(Not Set)'),
@@ -336,7 +336,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       elseif ($required == 'not allowed') {
         return array(
           '#type' => 'select',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#default_value' => NULL,
           '#value' => NULL,
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
@@ -348,7 +348,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       //set to optional
         return array(
           '#type' => 'select',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#default_value' => $data,
           // Defining false first so it's the default when setting up a form.
           '#options' => array('0' => 'false', '1' => 'true', '' => '(Not Set)'),
@@ -361,7 +361,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       // Set to optional.
     return array(
       '#type' => 'select',
-      '#title' => t("Property: %label", array('%label' => $label)),
+      '#title' => t('Property: %label', array('%label' => $label)),
       '#default_value' => $data,
       // Defining false first so it's the default when setting up a form.
       '#options' => array('0' => 'false', '1' => 'true', '' => '(Not Set)'),
@@ -376,7 +376,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       if ($required == 'true') {
         return array(
           '#type' => 'textfield',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
           '#required' => TRUE,
           '#default_value' => $data,
@@ -387,7 +387,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
         //set to optional
         return array(
           '#type' => 'textfield',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
           '#required' => FALSE,
           '#disabled' => TRUE,
@@ -400,7 +400,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       //required is set to a value other than true or not allowed so field is optional
         return array(
           '#type' => 'textfield',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
           '#required' => FALSE,
           '#default_value' => $data,
@@ -413,7 +413,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       //required parameter not set so field is optional
       return array(
         '#type' => 'textfield',
-        '#title' => t("Property: %label", array('%label' => $label)),
+        '#title' => t('Property: %label', array('%label' => $label)),
         '#description' => t("Type: %type <br> Description: %description <br> Required: (Not Set)", array('%label' => $label, '%type' => $type, '%description' => $description)),
         '#required' => FALSE,
         '#default_value' => $data,
@@ -457,7 +457,7 @@ function wsdl_docs_response_data($label, $type, $description, $data, $datatypes)
     $actual_type = $matches[1];
     $element = array(
       '#type' => 'fieldset',
-      '#title' => t("List of %label (%type)", array('%label' => $label, '%type' => $type)),
+      '#title' => t('List of %label (%type)', array('%label' => $label, '%type' => $type)),
       '#collapsible' => TRUE,
     );
     for ($field_id = 0; $field_id < 3; $field_id++) {
@@ -515,7 +515,7 @@ function _wsdl_docs_service_create($data) {
   // Confirm service name is unique
   $service_id = _wsdl_docs_get_service_id($data['name']);
   if ($service_id) {
-    return "Service with this name already exists";
+    return 'Service with this name already exists';
   }
   // @todo - this duplicates wsdl_docs_create_wsclient_service() but we need to do something a little different here.
   // Create new WSDL service.
@@ -560,7 +560,7 @@ function _wsdl_docs_service_update($name, $data) {
     }
     return "UPDATE SERVICE: $name, ID: $service_id";
   }
-  return "WSDL Doc not updated. No WSDL Doc matching the name and resource url was found.";
+  return 'WSDL Doc not updated. No WSDL Doc matching the name and resource url was found.';
 }
 
 /**
@@ -579,7 +579,7 @@ function _wsdl_docs_service_delete($name) {
     entity_delete('wsclient_service', $service_id);
     return "DELETE SERVICE: $name, ID: $service_id";
   }
-  return "WSDL Doc not deleted. No WSDL Doc matching the name was found.";
+  return 'WSDL Doc not deleted. No WSDL Doc matching the name was found.';
 }
 
 /**

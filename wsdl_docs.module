@@ -417,7 +417,7 @@ function wsdl_docs_update_service_operations($service, $DOMDocument) {
     $node = new stdClass();
     // Set operation label as node title.
     $node->title = $operation['label'];
-    $node->type = "operations";
+    $node->type = 'operations';
     node_object_prepare($node);
     // Set global user as node user.
     $node->uid = $user->uid;

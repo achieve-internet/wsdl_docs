@@ -272,9 +272,11 @@ function _wsdl_docs_get_output($operation_name, &$_outputs_messages, &$_messages
  * After WSDL service has been updated with a different URL or file describing the SOAP resource,
  * update all of its operation nodes accordingly.
  *
- * @param object $service
+ * @param \WSClientServiceDescription $service
  *   wsclient_service entity.
- * @param object $DOMDocument
+ * @param DOMDocument $DOMDocument
+ * @return string
+ *  only returns string if there is an error
  * @throws \Exception
  */
 function wsdl_docs_update_service_operations($service, $DOMDocument) {
@@ -282,8 +284,11 @@ function wsdl_docs_update_service_operations($service, $DOMDocument) {
 
   if (!$DOMDocument) {
     $wsdl = file_get_contents($service->url);
-    $DOMDocument = new DOMDocument();
-    $DOMDocument->loadXML($wsdl);
+    $DOMDocument = _wsdl_docs_validate_xml($wsdl);
+    if (!$DOMDocument) {
+      // XML didn't validate so stop here.
+      return 'Invalid XML.';
+    }
   }
 
   $documentations = $styles = $outputs = $outputs_messages = $messages_elements = $elements_types = $types_properties = array();

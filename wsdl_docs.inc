@@ -619,7 +619,7 @@ function _wsdl_docs_service_import($name) {
     $service = entity_load_single('wsclient_service', $service_id);
   }
   else {
-    return "No service found with this name.";
+    return 'No service found with this name.';
   }
   // Create $_FILES['files'] from array of file information provided by REST request.
   $_FILES['files'] = array();
@@ -630,8 +630,8 @@ function _wsdl_docs_service_import($name) {
   }
   // Confirm imported file(s) are of correct extension(s).
   foreach ($_FILES['files'] as $key => $file) {
-    $ext = pathinfo($file['name']);
-    if (!in_array($ext['extension'], array('xsd', 'wsdl'))) {
+    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+    if (!in_array($ext, array('xsd', 'wsdl'))) {
       return t('incorrect file format');
     }
   }
@@ -663,8 +663,8 @@ function _wsdl_docs_service_import($name) {
     // [service name]-[service id].wsdl or .xsd, depending on file's extension.
     // We are assuming this file has been provided first in the list of files to import.
     if ($i == 0) {
-      $ext = pathinfo($file['name']);
-      $tmp_filename = WSDL_DIRECTORY . $service->name . '-' . $service->id . '.' . $ext['extension'];
+      $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+      $tmp_filename = WSDL_DIRECTORY . $service->name . '-' . $service->id . '.' . $ext;
       $main_filename = $tmp_filename;
     }
     // For any additional files, keep the name the same so references from
@@ -672,7 +672,7 @@ function _wsdl_docs_service_import($name) {
     else {
       // Confirm file name isn't a path to some other directory/file elsewhere in the system.
       if (strpos($file['name'], '/')) {
-        return "Not a valid file name.";
+        return 'Not a valid file name.';
       }
     }
     file_unmanaged_save_data($wsdl, $tmp_filename, FILE_EXISTS_REPLACE);

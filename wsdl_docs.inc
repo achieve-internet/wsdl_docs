@@ -7,6 +7,13 @@
 /**
  * FAPI form used to display the options and the results of calling a web
  * service.
+ *
+ * @param array $form
+ * @param array $form_state
+ * @param WSClientServiceDescription $service
+ * @param array $operation
+ *
+ * @return array
  */
 function wsdl_docs_operation_invoke($form, $form_state, $service, $operation) {
   $strings = array(
@@ -149,6 +156,7 @@ function get_reference_number($form, $form_state) {
   $ref_Num_Request = $_SESSION['acoperations']['operations']['request'];
   return $form['parameters'][$ref_Num_Request]['referenceNumber'];
 }
+
 /**
  * Callback for the test from 'prepare' button.
  */
@@ -409,7 +417,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
         );
       }
     }
-    else{
+    else {
       //required parameter not set so field is optional
       return array(
         '#type' => 'textfield',
@@ -517,14 +525,11 @@ function _wsdl_docs_service_create($data) {
   if ($service_id) {
     return 'Service with this name already exists';
   }
-  // @todo - this duplicates wsdl_docs_create_wsclient_service() but we need to do something a little different here.
   // Create new WSDL service.
   $service = entity_create('wsclient_service', array('type' => 'soap'));
   $service->label = $data['name'];
   $service->name = strtolower(str_replace('-', '_', str_replace(' ', '_', $data['name'])));
   $service->save();
-  // Create WSDL service's operation nodes.
-  // wsdl_docs_update_wsclient_service($service);
   $name = $data['name'];
   $id = $service->id;
   return "WSDL service $name, ID: $id added.";
@@ -539,6 +544,7 @@ function _wsdl_docs_service_create($data) {
  *  Body data contains WSDL service URL
  * @return string
  *  Success or failure of update request.
+ * @throws \Exception
  */
 function _wsdl_docs_service_update($name, $data) {
   $service_id = _wsdl_docs_get_service_id($name);

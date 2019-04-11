@@ -10,14 +10,14 @@ include_once 'wsdl_docs.inc';
 /**
  * Directory for the services files.
  */
-define('WSDL_DIRECTORY', 'private://wsdl_docs_files/');
+define('WSDL_SUBDIR', 'wsdl_docs_files');
+define('WSDL_DIRECTORY', 'private://' . WSDL_SUBDIR . '/');
 
 /**
- * Implements hook_init().
+ * Implements hook_preprocess_node().
  */
-function wsdl_docs_init() {
-  //@todo remove this - should be a better way to add css
-  if (arg(0) == 'soap_apis') {
+function wsdl_docs_preprocess_node($vars) {
+  if ($vars['type'] == 'operations') {
     drupal_add_css(drupal_get_path('module', 'wsdl_docs') . '/ui/ui.css');
   }
 }
@@ -30,17 +30,11 @@ function wsdl_docs_permission() {
     'use wsdl docs services' => array(
       'title' => t('WSDL Docs Operations using Services module'),
     ),
+    'download wsdl xsd files' => array(
+      'title' => t('Download WSDL and XSD documents as displayed on operation nodes'),
+    )
   );
 }
-
-/**
- * Implements hook_menu_alter().
- *
- * Hide default webservice menu because it could confuse users, if we make this contrib may want to remove this or make it conditional.
- */
-//function wsdl_docs_menu_alter(&$items) {
-//  $items['admin/config/services']['access callback'] = FALSE;
-//}
 
 /**
  * Publish our testing UI and ajax callbacks.
@@ -50,7 +44,8 @@ function wsdl_docs_permission() {
 function wsdl_docs_menu() {
   // Page for deleting a WSDL service.
   $items['wsdl_docs/%/delete'] = array(
-    'page callback' => 'wsdl_docs_service_delete',
+    'page callback' => '_wsdl_docs_service_delete',
+    'file' => 'wsdl_docs.inc',
     'delivery callback' => 'drupal_json_output',
     'access callback' => 'wsdl_docs_basic_auth',
     'access arguments' => array(
@@ -67,7 +62,7 @@ function wsdl_docs_menu() {
     'page arguments' => array('wsdl_docs_form'),
     'access arguments' => array('access administration pages'),
     'type' => MENU_NORMAL_ITEM,
-    'description'=> 'WSDL docs',
+    'description' => 'WSDL docs',
     'weight' => -99,
   );
   // Add a WSDL service.
@@ -77,7 +72,7 @@ function wsdl_docs_menu() {
     'page arguments' => array('wsclient_service', NULL, 'add'),
     'access callback' => 'entity_access',
     'access arguments' => array('create', 'wsclient_service'),
-    'description'=> "Import WSDL files to create docs for your SOAP services",
+    'description' => 'Import WSDL files to create docs for your SOAP services',
     'type' => MENU_LOCAL_ACTION,
   );
   return $items;
@@ -181,7 +176,7 @@ function wsdl_docs_services_resources() {
               'description' => 'The name of the WSDL Doc on which the WSDL file should be imported',
             ),
             array(
-              'name' => 'soap_api_definition',
+              'name' => 'soap_api_definition[]',
               'optional' => FALSE,
               'source' => 'data',
               'description' => 'The file parameters',
@@ -195,93 +190,20 @@ function wsdl_docs_services_resources() {
 }
 
 /**
- * FAPI page callback.
- * @todo this is very similar to _wsdl_docs_service_delete in .inc file - combine?
- */
-function wsdl_docs_service_delete() {
-  // Get service id by service name.
-  $service_id = db_select('wsclient_service', 'ws')
-    ->fields('ws', array('id'))
-    ->condition('ws.label', arg(1))
-    ->execute()
-    ->fetchField();
-  // If service exists.
-  if (is_numeric($service_id)) {
-    // Delete the service
-    entity_delete('wsclient_service', $service_id);
-    return 'The service has been deleted.';
-  }
-
-  return 'ERROR the service name parameter';
-}
-
-/**
- * Create WSDL service by providing URL of WSDL resource.
- *
- * @param string $url
- *   WSDL resource URL.
- * @param string $name
- *   WSDL service name.
- * @return object
- *   Returns wsclient_service entity.
- */
-function wsdl_docs_create_wsclient_service($url, $name = '') {
-  $service = entity_create('wsclient_service', array('type' => 'soap'));
-  // if name is not empty
-  if (!empty($name)) {
-    $service->label = $name;
-    $service->name = strtolower(str_replace('-', '_', str_replace(' ', '_', $name)));
-  }
-  // If name is empty then generate name.
-  else {
-    $service->label = 'Service ' . date('d-m-Y H:i:s');
-    $service->name = 'service_' . date('d_m_Y_H_i_s');
-  }
-  $service->url = $url;
-  $service->status = 1;
-  $service->save();
-  return $service;
-}
-
-/**
- * Create WSDL service by providing WSDL file.
- *
- * @param string $name
- *   WSDL service name.
- * @param string $filename
- *   Filename as service URL.
- * @return object
- *   Returns wsclient_service entity.
- */
-function wsdl_docs_create_wsclient_service_upload($name, $filename) {
-  $service = entity_create('wsclient_service', array('type' => 'soap'));
-  $service->label = $name;
-  $service->name = strtolower(str_replace('-', '_', str_replace(' ', '_', $name)));
-  // Set path to local file as WSDL resource URL.
-  // Files are provided by REST import only, not via the admin UI when creating a WSDL service entity.
-  $service->url = $filename;
-  // Disable cache WSDL.
-  $service->settings = array('options' => array('cache_wsdl' => WSDL_CACHE_NONE));
-  $service->status = 1;
-  $service->save();
-  return $service;
-}
-
-/**
  * Update existing WSDL service.
+ * @todo should this be moved in to the .inc file?
  *
  * @param object $service
  *   wsclient_service entity.
  * @param object $DOMDocument
+ * @throws \Exception
  */
-function wsdl_docs_update_wsclient_service($service, $DOMDocument = null) {
-  // Rebuild types and operations in service.
+function wsdl_docs_update_wsclient_service($service, $DOMDocument = NULL) {
+  // Check if file is wsdl/xsd.
   $endpoint = $service->endpoint();
+  // Rebuild types and operations in service.
   $endpoint->initializeMetadata(TRUE);
   $service->save();
-  // @todo - i think this should get added a separate call in the functions
-  // using wsdl_docs_update_wsclient_service - it is confusing to update the service
-  // and then nest updating of the operations in the service update function.
   // Create or update operations nodes.
   wsdl_docs_update_service_operations($service, $DOMDocument);
   rules_clear_cache();
@@ -301,6 +223,7 @@ function _wsdl_docs_rem_namespace($str) {
 
 /**
  * Custom function to get_output.
+ * Called in step 4 of wsdl_docs_update_service_operations().
  *
  * @param string $operation_name
  *   Name of service operation.
@@ -349,18 +272,23 @@ function _wsdl_docs_get_output($operation_name, &$_outputs_messages, &$_messages
  * After WSDL service has been updated with a different URL or file describing the SOAP resource,
  * update all of its operation nodes accordingly.
  *
- * @todo - do the old operation nodes get deleted too?
- * @param object $service
+ * @param \WSClientServiceDescription $service
  *   wsclient_service entity.
- * @param object $DOMDocument
+ * @param DOMDocument $DOMDocument
+ * @return string
+ *  only returns string if there is an error
+ * @throws \Exception
  */
 function wsdl_docs_update_service_operations($service, $DOMDocument) {
   global $user;
 
   if (!$DOMDocument) {
     $wsdl = file_get_contents($service->url);
-    $DOMDocument = new DOMDocument();
-    $DOMDocument->loadXML($wsdl);
+    $DOMDocument = _wsdl_docs_validate_xml($wsdl);
+    if (!$DOMDocument) {
+      // XML didn't validate so stop here.
+      return 'Invalid XML.';
+    }
   }
 
   $documentations = $styles = $outputs = $outputs_messages = $messages_elements = $elements_types = $types_properties = array();
@@ -377,7 +305,7 @@ function wsdl_docs_update_service_operations($service, $DOMDocument) {
           $documentations[$operation_name] = $documentation[0]->nodeValue;
         }
       }
-      // For output (step 1): parsing correct output like WSDL viewer is multi step process. 
+      // For output (step 1): parsing correct output like WSDL viewer is multi step process.
       $message = $operation->getElementsByTagName('output')[0]->getAttribute('message');
       // Remove "tns:" namespace so we can parse the element.
       $message = _wsdl_docs_rem_namespace($message);
@@ -489,7 +417,7 @@ function wsdl_docs_update_service_operations($service, $DOMDocument) {
     $node = new stdClass();
     // Set operation label as node title.
     $node->title = $operation['label'];
-    $node->type = "operations";
+    $node->type = 'operations';
     node_object_prepare($node);
     // Set global user as node user.
     $node->uid = $user->uid;
@@ -516,49 +444,38 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
   foreach ($form as $key => $data) {
     $new_form[$key] = $data;
     if ($key == 'name') {
-      $new_form['description'] = array(
+      $new_form['description'] = [
         '#type' => 'textfield',
         '#title' => t('Description'),
         '#maxlength' => 255,
-      );
+      ];
       if (!empty($form_state['wsclient_service']->description)) {
         $new_form['description']['#default_value'] = $form_state['wsclient_service']->description;
       }
     }
-    elseif ($key == 'url') {
-      /*$new_form['file_upload'] = array(
-        '#type' => 'managed_file',
-        '#upload_location' => 'private://wsdl_docs_files/',
-        '#title' => 'file upload',
-        '#upload_validators' => array(
-          'file_validate_extensions' => array('txt xml wsdl'),
-        ),
-      );*/
-      /*$new_form['file_upload'] = array(
-        '#type' => 'file',
-        '#title' => 'file upload',
-      );*/
-    }
   }
   $form = $new_form;
-
+  // Determine if this is an existing service being edited.
+  // If not, hide some fields to minimize confusion.
+  $existing_service = TRUE;
   if (isset($form_state['wsclient_service']->is_new) && $form_state['wsclient_service']->is_new == 1) {
-    // Set soap to default on import drop-down and hide to improve UX/UI experience.
-    $form['type']['#default_value'] = 'soap';
-    $form['type']['#access'] = FALSE;
+    $existing_service = FALSE;
   }
-  else {
-    // Hide the fields
+  if ($existing_service) {
+    // Hide the fields.
     $form['operations']['#access'] = FALSE;
     $form['datatypes']['#access'] = FALSE;
     $form['global_parameters']['#access'] = FALSE;
   }
-
-  // $form['url']['#required'] = false;
-  // replace the wsclient_ui_element_url_validate function
+  else {
+    // Set soap to default on import drop-down and hide to improve UX/UI experience.
+    $form['type']['#default_value'] = 'soap';
+    $form['type']['#access'] = FALSE;
+  }
+  // Replace the wsclient_ui_element_url_validate function.
   $form['url']['#element_validate'][0] = 'wsdl_docs_wsclient_ui_element_url_validate';
-
-  // update operations nodes after save service
+  $form['#validate'][] = 'wsdl_docs_wsclient_service_form_validate';
+  // Update operations nodes after save service.
   $form['#submit'][] = 'wsdl_docs_wsclient_service_form_submit';
 }
 
@@ -570,18 +487,36 @@ function wsdl_docs_form_wsclient_service_form_alter(&$form, &$form_state) {
  * @param array $form_state
  */
 function wsdl_docs_wsclient_ui_element_url_validate($element, &$form_state) {
-  // Check to make sure user has either entered a URL or uploaded a file.
-  if (empty($form_state['input']['url']) && empty($form_state['input']['wsdl_file']['fid'])) {
-    form_error($element, t('Please enter a URL or upload a file.'));
-  }
-  // Check that user hasn't uploaded both a URL and a file.
-  if (!empty($form_state['input']['url']) && !empty($form_state['input']['wsdl_file']['fid'])) {
-    form_error($element, t('Please enter only a file OR a URL, not both.'));
+  // Check to make sure user has entered a URL.
+  if (empty($form_state['input']['url'][1])) {
+    form_error($element, t('Please enter a URL'));
   }
   // If user entered a URL, make sure it is valid.
   if (empty($form_state['input']['wsdl_file']['fid'])) {
     if (strpos($element['#value'], WSDL_DIRECTORY) === FALSE && !valid_url($element['#value'], TRUE)) {
       form_error($element, t('Please enter a valid URL.'));
+    }
+  }
+}
+
+/**
+ * Validation callback to check if the SOAP service URL points to a valid WSDL
+ * file.
+ */
+function wsdl_docs_wsclient_service_form_validate($form, $form_state) {
+  if ($form_state['values']['type'] == 'soap') {
+    // The url has to point to a valid WSDL file.
+    try {
+      // If initializing the SOAPClient succeeds we're good, otherwise we catch
+      // the exception below and suppress any further warnings.
+      // WARNING: if you have the xdebug PHP module enabled this can cause a
+      // fatal error on invalid WSDL files (instead of a catchable SoapFault
+      // exception).
+//       xdebug_disable();
+      @$endpoint = new SOAPClient($form_state['values']['url']);
+    }
+    catch (SoapFault $e) {
+      form_set_error('url', t('Error parsing the WSDL file: %message', array('%message' => $e->getMessage())));
     }
   }
 }
@@ -597,16 +532,16 @@ function wsdl_docs_wsclient_service_form_submit($form, &$form_state) {
     $service = entity_load_single('wsclient_service', $service_id);
     // Create or update operations.
     wsdl_docs_update_wsclient_service($service);
-	if (module_exists('pathauto')) {
-	  // Create path alias  for wsdl service
-	  $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
-	  if(!$path) {
-		global $language;
-		watchdog('wsdl_docs', '<pre>' . print_r($service, 1) . '</pre>');
-		module_load_include('inc', 'pathauto');
-		pathauto_create_alias('wsdl_docs', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'wsdl_docs', $language->language);
-	  }
-	}
+    if (module_exists('pathauto')) {
+      // Create path alias for wsdl service.
+      $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
+      if (!$path) {
+        global $language;
+        watchdog('wsdl_docs', '<pre>' . print_r($service, 1) . '</pre>');
+        module_load_include('inc', 'pathauto');
+        pathauto_create_alias('wsdl_docs', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'wsdl_docs', $language->language);
+      }
+    }
     // Add redirect to our list.
     if ($form['#action'] == '/admin/content/wsdl_docs/add') {
       $form_state['redirect'] = 'admin/content/wsdl_docs';
@@ -664,9 +599,9 @@ function wsdl_docs_node_view($node, $view_mode, $langcode) {
       $link = '';
       if (substr($service->url, 0, 7) != 'private') {
         $url = 'https://services.w3.org/xslt?xslfile=http://tomi.vanek.sk/xml/wsdl-viewer.xsl&amp;xmlfile=' . $service->url;
-        $link = l('View WSDL', $url);
+        $link = l(t('View WSDL'), $url);
       }
-      $raw_wsdl_link = l('View raw WSDL XML', $service->url);
+      $raw_wsdl_link = l(t('View raw WSDL XML'), $service->url);
       $node->content['apiform'] = array(
         '#markup' => '<span class="wsdl-viewer">' . $link . '</span><br><span class="wsdl-file">' . $raw_wsdl_link . '</span>' . drupal_render($form),
         '#weight' => 100,
@@ -685,7 +620,7 @@ function wsdl_docs_node_view($node, $view_mode, $langcode) {
 function wsdl_docs_form($form, &$form_state) {
   $form = drupal_get_form('wsclient_service_overview_form', 'wsclient_service');
   $h = $form['table']['#header'];
-  $form['table']['#header'] = array($h[0], $h[1], 'User', 'Created', $h[2]);
+  $form['table']['#header'] = array($h[0], $h[1], 'User', 'Created', $h[2], 'Download file(s)');
   $form['table']['#header'][4]['colspan'] -= 2;
   foreach ($form['table']['#rows'] as &$row) {
     $service = $row[0]['data']['#url']['options']['entity'];
@@ -702,7 +637,21 @@ function wsdl_docs_form($form, &$form_state) {
       $username = 'REST import';
     }
     $created = date('l m-d-Y H:i:s', $service->created);
-    $row = array($row[0], $row[1], $username, $created, $row[2], $row[4]);
+
+    // Add link to download zip (if available).
+    // Get length of service url file's extension.
+    $ext = pathinfo($service->url);
+    $ext_length = strlen($ext['extension']);
+    // Strip those characters from the service url file's name, then append '.zip'.
+    $zip_filename = (substr( $service->url, 0, (-1 * $ext_length))) . 'zip';
+    // If a zip file exists that matches, add a link to the zip in the admin screen.
+    if (file_exists($zip_filename)) {
+      $zip_link = l(t('archive of multiple files'), file_create_url($zip_filename));
+    }
+    else {
+      $zip_link = l(t('single file'), file_create_url($service->url));
+    }
+    $row = array($row[0], $row[1], $username, $created, $row[2], $row[4], $zip_link);
   }
 
   return $form;
@@ -722,71 +671,22 @@ function wsdl_docs_views_pre_render(&$view) {
 }
 
 /**
- * Perform basic HTTP authentication.
- *
- * @param string $path
- *   Path to protect.
- * @param string $username
- *   Desired username.
- * @param string $password
- *   Desired password.
- * @param string $id
- *   An unique ID for flood controlling.
- * @param string $callback
- *   Additional callback for checking accessibility.
- * @param array $arguments
- *   List of arguments for additional access callback.
- *
- * @return bool
- *   A state of authentication.
- */
-function wsdl_docs_basic_auth($id = 'basic_auth', $callback = '', array $arguments = []) {
-  $username = variable_get('wsdl_docsbasic_auth_username', '');
-  $password = variable_get('wsdl_docsbasic_auth_password', '');
-
-  // Credentials for authentication were received.
-  if (isset($_SERVER['PHP_AUTH_PW'], $_SERVER['PHP_AUTH_USER'])) {
-    $event = $id . '_basic_auth_failed_login_ip';
-    $limit = variable_get($id . '_basic_auth_threshold_limit', 5);
-    $window = variable_get($id . '_basic_auth_threshold_window', 3600);
-
-    if (flood_is_allowed($event, $limit, $window)) {
-      if ($password === $_SERVER['PHP_AUTH_PW'] && $username === $_SERVER['PHP_AUTH_USER']) {
-        flood_clear_event($event);
-
-        return !empty($callback) && is_callable($callback) ? (bool) call_user_func_array($callback, $arguments) : TRUE;
-      }
-
-      flood_register_event($event, $window);
-    }
-  }
-
-  header('WWW-Authenticate: Basic realm="Restricted Area"');
-  header('HTTP/1.1 401 Unauthorized');
-
-  exit('Access denied.');
-}
-
-
-/**
  * Implements hook_token_info().
  */
 function wsdl_docs_token_info() {
   $types['wsdl_docs'] = array(
-	'name' => t("Wsdl service"),
-	'description' => t("Wsdl service."),
+    'name' => t('Wsdl service'),
+    'description' => t('Wsdl service.'),
   );
-
   $wsdl['title'] = array(
-	'name' => t("Wsdl service name"),
-	'description' => t("Token for service name"),
+    'name' => t('Wsdl service name'),
+    'description' => t('Token for service name'),
   );
-
   return array(
-	'types' => $types,
-	'tokens' => array(
-	  'wsdl_docs' => $wsdl
-	),
+    'types' => $types,
+    'tokens' => array(
+      'wsdl_docs' => $wsdl
+    ),
   );
 }
 
@@ -797,20 +697,19 @@ function wsdl_docs_tokens($type, $tokens, array $data = array(), array $options 
   $replacements = array();
   $sanitize = !empty($options['sanitize']);
   if ($type == 'wsdl_docs') {
-	foreach ($tokens as $name => $original) {
-	  switch ($name) {
-		case 'title':
-		  $replacements[$original] = $sanitize ? filter_xss($data['service']->label) : $data['service']->label;
-		  break;
-	  }
-	}
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+      case 'title':
+        $replacements[$original] = $sanitize ? filter_xss($data['service']->label) : $data['service']->label;
+        break;
+      }
+    }
   }
-
   return $replacements;
 }
 
 /**
- * Implements hook_pathauto.
+ * Implements hook_pathauto().
  */
 function wsdl_docs_pathauto($op) {
   $settings = new stdClass();
@@ -874,5 +773,22 @@ function wsdl_docs_views_pre_view(&$view, &$display_id, &$args) {
         )
       );
     }
+  }
+}
+
+/**
+ * Implements hook_file_download().
+ */
+function wsdl_docs_file_download($uri) {
+  $path_elements = explode('/', $uri);
+  if (!in_array(WSDL_SUBDIR, $path_elements)) {
+    return NULL;
+  }
+  if (user_access('download wsdl xsd files')) {
+    $file = file_uri_to_object($uri);
+    return file_get_content_headers($file);
+  }
+  else {
+    return -1;
   }
 }

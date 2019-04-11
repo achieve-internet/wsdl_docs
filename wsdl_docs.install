@@ -27,6 +27,9 @@ function wsdl_docs_schema_alter(&$schema) {
   );
 }
 
+/**
+ * Implements hook_install().
+ */
 function wsdl_docs_install() {
   db_add_field('wsclient_service', 'description', array(
     'description' => 'The description of the service.',
@@ -48,6 +51,9 @@ function wsdl_docs_install() {
   variable_set('pathauto_node_operations_pattern', 'soap_apis/[node:field-service-ref:label]/[node:title]');
 }
 
+/**
+ * Implements hook_uninstall().
+ */
 function wsdl_docs_uninstall() {
   db_drop_field('wsclient_service', 'description');
   db_drop_field('wsclient_service', 'uid');

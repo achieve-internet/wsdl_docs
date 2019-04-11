@@ -132,7 +132,7 @@ function wsdl_docs_operation_invoke($form, $form_state, $service, $operation) {
  * FAPI form used to display all services that are managed.
  */
 function wsdl_docs_services_viewer($form, $form_state) {
-  drupal_set_title(t("Web Services"));
+  drupal_set_title(t('Web Services'));
 
     // @todo: Find and list all published services
     return $form;
@@ -153,7 +153,6 @@ function get_reference_number($form, $form_state) {
  * Callback for the test from 'prepare' button.
  */
 function wsdl_docs_prepare_request_callback($form, $form_state) {
- // firep($form_state);
   $service = $form_state['build_info']['args'][0];
   $operation = $form_state['build_info']['args'][1];
 
@@ -175,7 +174,7 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
     // disable cache when testing!
     $service->settings['options']['cache_wsdl'] = WSDL_CACHE_NONE;
   }
-  
+
   // Ready to actually invoke the call
   $timer_before = microtime();
   try {
@@ -187,12 +186,11 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
     }
   }
   catch (Exception $e) {
-    //$response = $e->getMessage();
-    drupal_set_message("<pre>Catch Exception - " . $e->getMessage() . "</pre>");
+    drupal_set_message(t('Exception: %e'), array('%e' => $e->getMessage()));
   }
   $timer_duration = $timer_before - microtime();
   $element = $form['transaction'];
-  
+
   // Place the trace data into the display.
   if ($service->type == 'rest') {
     $operation = $service->operations[$operation['name']];
@@ -217,7 +215,7 @@ function wsdl_docs_prepare_request_callback($form, $form_state) {
     $_SESSION['lastResponse'] = $service->endpoint()->client()->__getLastResponse();
   }
 
-  $element['#value'] = t("Ran at %time, took %duration to execute", array(
+  $element['#value'] = t('Ran at %time, took %duration to execute', array(
     '%time' => time(),
     '%duration' => $timer_duration,
   ));
@@ -284,7 +282,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
     foreach ($datatype['property info'] as $field_id => $field_info) {
       // Recurse and get each bit to render its own input element.
       //pre-populate fields with developer data
-      if ($field_id == "timeStamp") {
+      if ($field_id == 'timeStamp') {
         $dt = new DateTime();
         $dt->setTimeZone(new DateTimeZone('UTC'));
         $timeStamp = $dt->format('c');
@@ -304,7 +302,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
     $actual_type = $matches[1];
     $element = array(
       '#type' => 'fieldset',
-      '#title' => t("List of %label (%type)", array('%label' => $label, '%type' => $type)),
+      '#title' => t('List of %label (%type)', array('%label' => $label, '%type' => $type)),
       '#collapsible' => TRUE,
     );
     for ($field_id = 0; $field_id < 3; $field_id++) {
@@ -317,7 +315,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
   elseif ($type == 'text_formatted') {
     return array(
       '#type' => 'textarea',
-      '#title' => t("Property: %label", array('%label' => $label)),
+      '#title' => t('Property: %label', array('%label' => $label)),
       '#default_value' => $data,
       '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
     );
@@ -327,7 +325,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       if ($required == 'true') {
         return array(
           '#type' => 'select',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#default_value' => $data,
           // Defining false first so it's the default when setting up a form.
           '#options' => array('0' => 'false', '1' => 'true', '' => '(Not Set)'),
@@ -338,7 +336,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       elseif ($required == 'not allowed') {
         return array(
           '#type' => 'select',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#default_value' => NULL,
           '#value' => NULL,
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
@@ -350,7 +348,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       //set to optional
         return array(
           '#type' => 'select',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#default_value' => $data,
           // Defining false first so it's the default when setting up a form.
           '#options' => array('0' => 'false', '1' => 'true', '' => '(Not Set)'),
@@ -363,7 +361,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       // Set to optional.
     return array(
       '#type' => 'select',
-      '#title' => t("Property: %label", array('%label' => $label)),
+      '#title' => t('Property: %label', array('%label' => $label)),
       '#default_value' => $data,
       // Defining false first so it's the default when setting up a form.
       '#options' => array('0' => 'false', '1' => 'true', '' => '(Not Set)'),
@@ -374,11 +372,11 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
   }
   else {
     // A textfield will normally do for any other primitives.
-    if (isset ($required)){
+    if (isset($required)) {
       if ($required == 'true') {
         return array(
           '#type' => 'textfield',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
           '#required' => TRUE,
           '#default_value' => $data,
@@ -389,7 +387,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
         //set to optional
         return array(
           '#type' => 'textfield',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
           '#required' => FALSE,
           '#disabled' => TRUE,
@@ -402,7 +400,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       //required is set to a value other than true or not allowed so field is optional
         return array(
           '#type' => 'textfield',
-          '#title' => t("Property: %label", array('%label' => $label)),
+          '#title' => t('Property: %label', array('%label' => $label)),
           '#description' => t("Type: %type <br> Description: %description <br> Required: %required", array('%label' => $label, '%type' => $type, '%description' => $description, '%required' => $required)),
           '#required' => FALSE,
           '#default_value' => $data,
@@ -415,7 +413,7 @@ function wsdl_docs_request_data($label, $type, $description, $data, $datatypes, 
       //required parameter not set so field is optional
       return array(
         '#type' => 'textfield',
-        '#title' => t("Property: %label", array('%label' => $label)),
+        '#title' => t('Property: %label', array('%label' => $label)),
         '#description' => t("Type: %type <br> Description: %description <br> Required: (Not Set)", array('%label' => $label, '%type' => $type, '%description' => $description)),
         '#required' => FALSE,
         '#default_value' => $data,
@@ -459,7 +457,7 @@ function wsdl_docs_response_data($label, $type, $description, $data, $datatypes)
     $actual_type = $matches[1];
     $element = array(
       '#type' => 'fieldset',
-      '#title' => t("List of %label (%type)", array('%label' => $label, '%type' => $type)),
+      '#title' => t('List of %label (%type)', array('%label' => $label, '%type' => $type)),
       '#collapsible' => TRUE,
     );
     for ($field_id = 0; $field_id < 3; $field_id++) {
@@ -506,6 +504,9 @@ function wsdl_docs_node_load_by_title($title, $node_type) {
 }
 
 /**
+ * Create a new WSDL Docs service via REST.
+ * Will need to add the reference to the WSDL/XSD documentation in a separate PUT/POST.
+ *
  * @param array $data
  *  Array of body data passed via POST
  * @return string
@@ -514,7 +515,7 @@ function _wsdl_docs_service_create($data) {
   // Confirm service name is unique
   $service_id = _wsdl_docs_get_service_id($data['name']);
   if ($service_id) {
-    return "Service with this name already exists";
+    return 'Service with this name already exists';
   }
   // @todo - this duplicates wsdl_docs_create_wsclient_service() but we need to do something a little different here.
   // Create new WSDL service.
@@ -530,6 +531,8 @@ function _wsdl_docs_service_create($data) {
 }
 
 /**
+ * Update an existing WSDL Docs service via REST PUT.
+ *
  * @param string $name
  *  Name of the WSDL Docs service being updated
  * @param array $data
@@ -540,22 +543,29 @@ function _wsdl_docs_service_create($data) {
 function _wsdl_docs_service_update($name, $data) {
   $service_id = _wsdl_docs_get_service_id($name);
   if (is_numeric($service_id)) {
-    // load existing WSDL service
+    // Create DOMDocument object if XML validates.
+    $wsdl = file_get_contents($data['url']);
+    $DOMDocument = _wsdl_docs_validate_xml($wsdl);
+    if (!$DOMDocument) {
+      return 'Invalid XML.';
+    }
+    // Load existing WSDL service.
     $service = entity_load_single('wsclient_service', $service_id);
     // Update existing WSDL service's URL.
     $service->url = $data['url'];
     $service->save();
     // update WSDL service's operation nodes
-    $wsdl = file_get_contents($data['url']);
-    $DOMDocument = new DOMDocument();
-    $DOMDocument->loadXML($wsdl);
-    wsdl_docs_update_wsclient_service($service, $DOMDocument);
+    if ($DOMDocument) {
+      wsdl_docs_update_wsclient_service($service, $DOMDocument);
+    }
     return "UPDATE SERVICE: $name, ID: $service_id";
   }
-  return "WSDL Doc not updated. No WSDL Doc matching the name and resource url was found.";
+  return 'WSDL Doc not updated. No WSDL Doc matching the name and resource url was found.';
 }
 
 /**
+ * Delete WSDL Docs service via REST DELETE.
+ *
  * @param $name
  *  Name of the WSDL Docs service being deleted
  * @param $data
@@ -569,10 +579,12 @@ function _wsdl_docs_service_delete($name) {
     entity_delete('wsclient_service', $service_id);
     return "DELETE SERVICE: $name, ID: $service_id";
   }
-  return "WSDL Doc not deleted. No WSDL Doc matching the name was found.";
+  return 'WSDL Doc not deleted. No WSDL Doc matching the name was found.';
 }
 
 /**
+ * Given a WSDL Doc service, get its ID.
+ *
  * @param string $name
  *  Name of the WSDL Docs service being updated
  * @param string $url
@@ -592,9 +604,12 @@ function _wsdl_docs_get_service_id($name) {
 }
 
 /**
+ * Import file(s) to an existing WSDL Doc service via REST POST.
+ *
  * @param $name
  *  Name of the WSDL Docs service being updated/created
  * @return mixed|string
+ * @throws \Exception
  */
 function _wsdl_docs_service_import($name) {
   // Get existing service ID.
@@ -604,34 +619,142 @@ function _wsdl_docs_service_import($name) {
     $service = entity_load_single('wsclient_service', $service_id);
   }
   else {
-    return "No service found with this name.";
+    return 'No service found with this name.';
   }
-  // Import via file.
-  // Manipulate $_FILES to match form version.
-  $_FILES['files'] = $_FILES['soap_api_definition'];
-  // Confirm file is of correct type.
-  $tmp = explode(".", $_FILES['soap_api_definition']['name']);
-  $ext = array_pop($tmp);
-  if ($ext != 'wsdl') {
-    return services_error(t('incorrect file format'), 500);
+  // Create $_FILES['files'] from array of file information provided by REST request.
+  $_FILES['files'] = array();
+  foreach ($_FILES['soap_api_definition'] as $file_key => $values) {
+    foreach ($values as $key => $value) {
+      $_FILES['files'][$key][$file_key] = $value;
+    }
   }
-  // Save wsdl file.
-  $wsdl = file_get_contents($_FILES['soap_api_definition']['tmp_name']);
+  // Confirm imported file(s) are of correct extension(s).
+  foreach ($_FILES['files'] as $key => $file) {
+    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+    if (!in_array($ext, array('xsd', 'wsdl'))) {
+      return t('incorrect file format');
+    }
+  }
+  // Prepare to save file(s) to selected directory.
   $directory = WSDL_DIRECTORY;
   file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
-  $filename = WSDL_DIRECTORY . $name . '-' . $service_id . '.wsdl';
-  file_unmanaged_save_data($wsdl, $filename, FILE_EXISTS_REPLACE);
-  // Save new WSDL file to existing WSDL service entity.
-  $service->url = $filename;
-  $service->save();
-  // Load file contents.
-  $DOMDocument = new DOMDocument();
-  $loaded = $DOMDocument->loadXML($wsdl);
-  if (!$loaded) {
-    return 'ERROR input file is not XML';
+  $multiple_files = (count($_FILES['files']) > 1);
+  // Prepare to zip up multiple files for download from admin/content/wsdl_docs.
+  if ($multiple_files) {
+    $zip = new ZipArchive();
+    $zip_filename = $service->name . '-' . $service->id . '.zip';
+    $path = drupal_realpath($directory) . '/' . $zip_filename;
+    fopen(drupal_realpath($zip_filename), 'w');
+    $zip->open($path, ZipArchive::CREATE);
   }
-  // Update existing service with new specs per file upload.
-  wsdl_docs_update_wsclient_service($service, $DOMDocument);
-
+  // Save individual file(s) as well as add to zip if multiple files imported.
+  $i = 0;
+  foreach ($_FILES['files'] as $key => $file) {
+    $wsdl = file_get_contents($file['tmp_name']);
+    // Perform basic XML validation.
+    $DOMDocument = _wsdl_docs_validate_xml($wsdl);
+    if ($DOMDocument) {
+      $tmp_filename = WSDL_DIRECTORY . $file['name'];
+    }
+    else {
+      return 'Invalid XML.';
+    }
+    // For the main WSDL/XSD file that refers to other files, name it
+    // [service name]-[service id].wsdl or .xsd, depending on file's extension.
+    // We are assuming this file has been provided first in the list of files to import.
+    if ($i == 0) {
+      $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+      $tmp_filename = WSDL_DIRECTORY . $service->name . '-' . $service->id . '.' . $ext;
+      $main_filename = $tmp_filename;
+    }
+    // For any additional files, keep the name the same so references from
+    // the main file still work.
+    else {
+      // Confirm file name isn't a path to some other directory/file elsewhere in the system.
+      if (strpos($file['name'], '/')) {
+        return 'Not a valid file name.';
+      }
+    }
+    file_unmanaged_save_data($wsdl, $tmp_filename, FILE_EXISTS_REPLACE);
+    // For multiple files, add this file to the zip.
+    if ($multiple_files) {
+      $zip->addFromString($file['name'], $wsdl);
+    }
+    // Increment counter as we only rename the first file passed in the request.
+    $i++;
+  }
+  // Validate main WSDL after saving file(s). If not valid, delete.
+  // Additional wsdl files won't validate if they require the main file.
+  _wsdl_docs_validate_wsdl_file($main_filename);
+  // Save path of main/single file to existing WSDL service entity.
+  if (isset($main_filename)) {
+    $service->url = $main_filename;
+    $service->save();
+    $wsdl = file_get_contents($main_filename);
+    $DOMDocument = new DOMDocument();
+    $loaded = $DOMDocument->loadXML($wsdl);
+    if ($loaded) {
+      // Update existing service with new specs per file upload.
+      wsdl_docs_update_wsclient_service($service, $DOMDocument);
+    }
+    else {
+      return 'Invalid XML.';
+    }
+  }
+  else {
+    return 'Error importing files.';
+  }
   return "WSDL Doc: $name, id: $service_id updated.";
+}
+
+/**
+ * Validates that the local path to file points to a valid WSDL file.
+ *
+ * This was taken from wsclient_soap.module so validation may be run twice,
+ * but wanted to delete file saved to file system if WSDL doesn't validate.
+ *
+ * @param $url
+ *  path to local wsdl file imported by PUT or remote URL
+ *
+ * @return string|null
+ *  Error if exception is caught, null if no exception.
+ */
+function _wsdl_docs_validate_wsdl_file($url) {
+  // The url has to point to a valid WSDL file.
+  try {
+    // If initializing the SOAPClient succeeds we're good, otherwise we catch
+    // the exception below and suppress any further warnings.
+    // WARNING: if you have the xdebug PHP module enabled this can cause a
+    // fatal error on invalid WSDL files (instead of a catchable SoapFault
+    // exception).
+    // xdebug_disable();
+    @$endpoint = new SOAPClient($url);
+  }
+  catch (SoapFault $e) {
+    $error = $e->getMessage();
+    file_unmanaged_delete($url);
+    return "Error parsing the WSDL file: $error";
+  }
+  return NULL;
+}
+
+/**
+ * Validate XML and create DOMDocument object if valid
+ * @param string $wsdl
+ *  xml loaded from wsdl/xsd file
+ *
+ * @return \DOMDocument|FALSE
+ *  returns loaded DOMDocument object if XML validates, FALSE if invalid.
+ */
+function _wsdl_docs_validate_xml($wsdl) {
+  $DOMDocument = new DOMDocument();
+  // Validate XML when loading.
+  libxml_use_internal_errors(true);
+  $DOMDocument->loadXML($wsdl);
+  $errors = libxml_get_errors();
+  if (!empty($errors)) {
+    return FALSE;
+  }
+  libxml_clear_errors();
+  return $DOMDocument;
 }

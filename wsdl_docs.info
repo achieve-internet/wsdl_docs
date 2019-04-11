@@ -8,5 +8,6 @@ dependencies[] = entityreference
 dependencies[] = pathauto
 dependencies[] = services
 dependencies[] = rest_server
+dependencies[] = wsdl_docs_features
 configure = admin/content/wsdl_docs
 version = "7.x-1.x-dev"

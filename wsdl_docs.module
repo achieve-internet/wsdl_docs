@@ -28,7 +28,7 @@ function wsdl_docs_preprocess_node($vars) {
 function wsdl_docs_permission() {
   return array(
     'use wsdl docs services' => array(
-      'title' => t('WSDL Docs Operations using Services module'),
+      'title' => t('Make REST requests for WSDL Docs via Services'),
     ),
     'download wsdl xsd files' => array(
       'title' => t('Download WSDL and XSD documents as displayed on operation nodes'),

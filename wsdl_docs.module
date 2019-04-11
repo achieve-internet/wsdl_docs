@@ -89,7 +89,7 @@ function wsdl_docs_services_resources() {
     'wsdl' => array(
       'operations' => array(
         'create' => array(
-          'help' => 'Create a WSDL Doc',
+          'help' => 'Create a WSDL Doc service.',
           'file' => array(
             'type' => 'inc',
             'module' => 'wsdl_docs',
@@ -109,7 +109,7 @@ function wsdl_docs_services_resources() {
           'access arguments' => array('use wsdl docs services'),
         ),
         'update' => array(
-          'help' => 'Update a WSDL Doc',
+          'help' => 'Update an existing WSDL Doc service from a WSDL resource URL.',
           'file' => array(
             'type' => 'inc',
             'module' => 'wsdl_docs',

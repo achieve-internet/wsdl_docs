@@ -18,6 +18,7 @@ This module creates nodes from Operations in a WSDL and allows sending of SOAP r
     * There is a 'Download WSDL and XSD documents as displayed on operation nodes' permission that allows users to download any WSDL files that were imported to a 'WSDL Doc' service. 
 
 ## USAGE
+* The Web Service Client UI (wsclient_ui) is not enabled as a dependency. Enable as needed for the following configurations. 
 * Import WSDL via URL using the Drupal admin UI 
     * /admin/content/wsdl_docs/add
 * View operation nodes

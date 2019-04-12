@@ -536,7 +536,7 @@ function wsdl_docs_wsclient_service_form_submit($form, &$form_state) {
       $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
       if (!$path) {
         global $language;
-        watchdog('wsdl_docs', t('Path alias not found for soap_apis. Notice: %notice', array('%notice' => print_r($service, 1)), WATCHDOG_NOTICE));
+        watchdog('wsdl_docs', t('Path alias not found for soap_apis. Notice: %notice'), array('%notice' => print_r($service, 1), WATCHDOG_NOTICE));
         module_load_include('inc', 'pathauto');
         pathauto_create_alias('wsdl_docs', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'wsdl_docs', $language->language);
       }

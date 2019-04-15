@@ -146,18 +146,6 @@ function wsdl_docs_services_viewer($form, $form_state) {
 }
 
 /**
- * Get ref no by calling api.
- */
-function get_reference_number($form, $form_state) {
-  /*  replacing 'referenceNumberRequest' with $ref_Num_Request - Gurpreet
-  return $form['parameters']['referenceNumberRequest']['referenceNumber'];
-  */
-
-  $ref_Num_Request = $_SESSION['acoperations']['operations']['request'];
-  return $form['parameters'][$ref_Num_Request]['referenceNumber'];
-}
-
-/**
  * Callback for the test from 'prepare' button.
  */
 function wsdl_docs_prepare_request_callback($form, $form_state) {

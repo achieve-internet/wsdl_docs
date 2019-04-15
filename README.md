@@ -14,10 +14,11 @@ This module creates nodes from Operations in a WSDL and allows sending of SOAP r
 * Enable Features
     * wsdl_docs_features
 * Permissions: 
-    * There is a 'WSDL Docs Operations using Services module' permission that is checked when making requests via REST. Make sure you add a user that has this permission, and use that user's login credentials when making REST requests.
+    * There is a 'Make REST requests for WSDL Docs via Services' permission that is checked when making requests via REST. Make sure you add a user that has this permission, and use that user's login credentials when making REST requests.
     * There is a 'Download WSDL and XSD documents as displayed on operation nodes' permission that allows users to download any WSDL files that were imported to a 'WSDL Doc' service. 
 
 ## USAGE
+* The Web Service Client UI (wsclient_ui) is not enabled as a dependency. Enable as needed for the following configurations. 
 * Import WSDL via URL using the Drupal admin UI 
     * /admin/content/wsdl_docs/add
 * View operation nodes
@@ -47,11 +48,11 @@ This module creates nodes from Operations in a WSDL and allows sending of SOAP r
 1. Make sure the services, services_basic_auth, and rest_server modules are enabled
 1. At admin/structure/services/add add your service, select REST as the Server, select HTTP basic authentication for the authentication, and save.
 1. Once you've added your service, click on the Edit Resources configuration option at admin/structure/services for your service.
-1. Under the WSDL resource, select the operations you want to make available (CUD available only right now) and save.
+1. Under the WSDL resource, select the operations you want to make available (CUD available only right now) and save. Update allows you to update an existing service based on the URL of the WSDL resource. Import allows you to update an existing service based on uploaded file(s). 
 1. Make sure you have a user with the permission 'WSDL Docs Operations using Services module'.
 ### Importing WSDL Docs via REST
 WSDL/XSD files may be imported via URL or file:
-1. First create your WSDL Doc Service (see Create a WSDL Doc Service below).
+1. First create your WSDL Doc Service (see Create a WSDL Doc Service below). This will add the service and can be viewed at admin/content/wsdl_docs.
 1. Then import the .wsdl file itself via:
     1. File(s) (see Import a WSDL to an Existing Service by WSDL file below) OR
     1. URL of WSDL resource (see Update a WSDL Doc Service's Operations by URL of WSDL resource below)
@@ -68,7 +69,7 @@ Note: Use HTTP Basic Auth for these APIs. The username/password are the credenti
 -H 'Content-Type: application/json' \
 -d '{"url": "[URL of WSDL/XSD file ie http://www.thomas-bayer.com/axis2/services/BLZService?wsdl]"}'`
 #### Import a WSDL file(s) to an Existing Service by WSDL file
-For importing multiple files, be sure the first file in the list is the main file that makes any references to additional files. 
+For importing multiple files, be sure the first file in the list is the main file that makes any references to additional files. The first file imported will be renamed [service-machine-name]-[service-id].[file extension (wsdl/xsd)] and saved to sites/default/private/wsdl_docs_files. If multiple files are imported, an archive of all of the files will be saved as [service-machine-name]-[service-id].zip.
 `curl -X POST [your-website-url]/[your-service-path-to-endpoint]/wsdl/[wsdl-doc-machine-name]/import \
 -H 'Authorization: Basic [authorization hash]' \
 -H 'content-type: multipart/form-data' \

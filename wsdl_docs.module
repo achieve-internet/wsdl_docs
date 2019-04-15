@@ -28,7 +28,7 @@ function wsdl_docs_preprocess_node($vars) {
 function wsdl_docs_permission() {
   return array(
     'use wsdl docs services' => array(
-      'title' => t('WSDL Docs Operations using Services module'),
+      'title' => t('Make REST requests for WSDL Docs via Services'),
     ),
     'download wsdl xsd files' => array(
       'title' => t('Download WSDL and XSD documents as displayed on operation nodes'),
@@ -89,7 +89,7 @@ function wsdl_docs_services_resources() {
     'wsdl' => array(
       'operations' => array(
         'create' => array(
-          'help' => 'Create a WSDL Doc',
+          'help' => 'Create a WSDL Doc service.',
           'file' => array(
             'type' => 'inc',
             'module' => 'wsdl_docs',
@@ -109,7 +109,7 @@ function wsdl_docs_services_resources() {
           'access arguments' => array('use wsdl docs services'),
         ),
         'update' => array(
-          'help' => 'Update a WSDL Doc',
+          'help' => 'Update an existing WSDL Doc service from a WSDL resource URL.',
           'file' => array(
             'type' => 'inc',
             'module' => 'wsdl_docs',
@@ -191,7 +191,6 @@ function wsdl_docs_services_resources() {
 
 /**
  * Update existing WSDL service.
- * @todo should this be moved in to the .inc file?
  *
  * @param object $service
  *   wsclient_service entity.
@@ -537,7 +536,7 @@ function wsdl_docs_wsclient_service_form_submit($form, &$form_state) {
       $path = drupal_lookup_path('alias', 'soap_apis/' . $service->id);
       if (!$path) {
         global $language;
-        watchdog('wsdl_docs', '<pre>' . print_r($service, 1) . '</pre>');
+        watchdog('wsdl_docs', t('Path alias not found for soap_apis. Notice: %notice'), array('%notice' => print_r($service, 1), WATCHDOG_NOTICE));
         module_load_include('inc', 'pathauto');
         pathauto_create_alias('wsdl_docs', 'insert', 'soap_apis/' . $service->id , array('service' => $service), 'wsdl_docs', $language->language);
       }
@@ -611,6 +610,7 @@ function wsdl_docs_node_view($node, $view_mode, $langcode) {
 }
 
 /**
+ * Implements hook_form().
  * List of services.
  *
  * @param array $form
@@ -620,7 +620,7 @@ function wsdl_docs_node_view($node, $view_mode, $langcode) {
 function wsdl_docs_form($form, &$form_state) {
   $form = drupal_get_form('wsclient_service_overview_form', 'wsclient_service');
   $h = $form['table']['#header'];
-  $form['table']['#header'] = array($h[0], $h[1], 'User', 'Created', $h[2], 'Download file(s)');
+  $form['table']['#header'] = array($h[0], $h[1], 'User', 'Created', $h[2], 'Service URL');
   $form['table']['#header'][4]['colspan'] -= 2;
   foreach ($form['table']['#rows'] as &$row) {
     $service = $row[0]['data']['#url']['options']['entity'];
@@ -639,17 +639,20 @@ function wsdl_docs_form($form, &$form_state) {
     $created = date('l m-d-Y H:i:s', $service->created);
 
     // Add link to download zip (if available).
-    // Get length of service url file's extension.
-    $ext = pathinfo($service->url);
-    $ext_length = strlen($ext['extension']);
-    // Strip those characters from the service url file's name, then append '.zip'.
-    $zip_filename = (substr( $service->url, 0, (-1 * $ext_length))) . 'zip';
-    // If a zip file exists that matches, add a link to the zip in the admin screen.
-    if (file_exists($zip_filename)) {
-      $zip_link = l(t('archive of multiple files'), file_create_url($zip_filename));
-    }
-    else {
-      $zip_link = l(t('single file'), file_create_url($service->url));
+    $zip_link = l($service->url, $service->url);
+    $ext = pathinfo($service->url, PATHINFO_EXTENSION);
+    if (!empty($ext)) {
+      // Get length of service url file's extension (could be zip, wsdl, or xsd).
+      $ext_length = strlen($ext);
+      // Strip those characters from the service url file's name, then append '.zip'.
+      $zip_filename = (substr( $service->url, 0, (-1 * $ext_length))) . 'zip';
+      // If a zip file exists that matches, add a link to the zip in the admin screen.
+      if (file_exists($zip_filename)) {
+        $zip_link = l(t('archive of multiple files'), file_create_url($zip_filename));
+      }
+      else {
+        $zip_link = l(t('single file'), file_create_url($service->url));
+      }
     }
     $row = array($row[0], $row[1], $username, $created, $row[2], $row[4], $zip_link);
   }

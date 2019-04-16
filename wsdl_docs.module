@@ -600,7 +600,14 @@ function wsdl_docs_node_view($node, $view_mode, $langcode) {
         $url = 'https://services.w3.org/xslt?xslfile=http://tomi.vanek.sk/xml/wsdl-viewer.xsl&amp;xmlfile=' . $service->url;
         $link = l(t('View WSDL'), $url);
       }
-      $raw_wsdl_link = l(t('View raw WSDL XML'), $service->url);
+      // If file is saved via file import, need to fix file path
+      // so user is able to download the file.
+      if (strstr($service->url, WSDL_DIRECTORY)) {
+        $raw_wsdl_link = l(t('Download WSDL'), file_create_url($service->url));
+      }
+      else {
+        $raw_wsdl_link = l(t('View raw WSDL XML'), $service->url);
+      }
       $node->content['apiform'] = array(
         '#markup' => '<span class="wsdl-viewer">' . $link . '</span><br><span class="wsdl-file">' . $raw_wsdl_link . '</span>' . drupal_render($form),
         '#weight' => 100,

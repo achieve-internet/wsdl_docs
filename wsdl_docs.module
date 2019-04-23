@@ -802,3 +802,19 @@ function wsdl_docs_file_download($uri) {
     return -1;
   }
 }
+
+/**
+ * Implements hook_flag_type_info().
+ *
+ * Makes wsclient_service entities flaggable per contrib Flag module.
+ */
+function wsdl_docs_flag_type_info() {
+  return array(
+    'wsclient_service' => array(
+      'title' => t('WSDL Service'),
+      'description' => t("A WSDL Service that documents a SOAP API via its operations."),
+      'handler' => 'flag_entity',
+      'module' => 'wsdl_docs',
+    ),
+  );
+}

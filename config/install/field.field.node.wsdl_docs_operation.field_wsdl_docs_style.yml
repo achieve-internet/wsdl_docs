@@ -1,0 +1,21 @@
+uuid: 95ee2474-e4af-4482-be9e-926453f60781
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_wsdl_docs_style
+    - node.type.wsdl_docs_operation
+  module:
+    - options
+id: node.wsdl_docs_operation.field_wsdl_docs_style
+field_name: field_wsdl_docs_style
+entity_type: node
+bundle: wsdl_docs_operation
+label: Style
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

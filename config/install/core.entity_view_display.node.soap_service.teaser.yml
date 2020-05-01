@@ -1,0 +1,29 @@
+uuid: 97774975-a51d-40e2-ba95-3fa4235c03ad
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.soap_service.body
+    - field.field.node.soap_service.field_wsdl_docs_source
+    - node.type.soap_service
+  module:
+    - user
+id: node.soap_service.teaser
+targetEntityType: node
+bundle: soap_service
+mode: teaser
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  operations_list:
+    weight: 0
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  body: true
+  field_wsdl_docs_source: true

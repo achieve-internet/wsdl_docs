@@ -1,0 +1,17 @@
+uuid: 518e0c0e-c8e8-45ce-9a33-bf24a6f71090
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: 'WSDL Docs Operation'
+type: wsdl_docs_operation
+description: 'Single Operation definition derived from and associated with a SOAP Service.'
+help: ''
+new_revision: true
+preview_mode: 0
+display_submitted: false

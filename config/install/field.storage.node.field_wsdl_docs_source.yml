@@ -1,0 +1,19 @@
+uuid: 1eb4e921-7330-4edf-9212-47f354a27c53
+langcode: en
+status: true
+dependencies:
+  module:
+    - link
+    - node
+id: node.field_wsdl_docs_source
+field_name: field_wsdl_docs_source
+entity_type: node
+type: link
+settings: {  }
+module: link
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,21 @@
+uuid: 6bc9002f-e971-4c57-bdca-d7aeb33df792
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_wsdl_docs_output
+    - node.type.wsdl_docs_operation
+  module:
+    - text
+id: node.wsdl_docs_operation.field_wsdl_docs_output
+field_name: field_wsdl_docs_output
+entity_type: node
+bundle: wsdl_docs_operation
+label: Output
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

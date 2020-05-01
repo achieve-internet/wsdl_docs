@@ -1,0 +1,8 @@
+services:
+  wsdl_docs.soap_client_manager:
+    class: Drupal\wsdl_docs\Services\SoapClientManager
+    arguments:
+      - '@logger.factory'
+      - '@entity_type.manager'
+      - '@file_system'
+      - '@current_user'

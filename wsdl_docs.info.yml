@@ -1,0 +1,5 @@
+name: WSDL Docs
+type: module
+description: 'Import WSDL documentation from a SOAP endpoint..'
+package: Content
+core: 8.x

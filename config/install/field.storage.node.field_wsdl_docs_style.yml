@@ -1,0 +1,27 @@
+uuid: 570f7a8f-7cfb-4c08-8fb8-33bfa2b93a8b
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.field_wsdl_docs_style
+field_name: field_wsdl_docs_style
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: rpc
+      label: rpc
+    -
+      value: document
+      label: document
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

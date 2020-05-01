@@ -1,0 +1,40 @@
+uuid: 0d2073b8-28b5-4f57-b6ee-985401f8cde2
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.wsdl_docs_operation.body
+    - field.field.node.wsdl_docs_operation.field_wsdl_docs_documentation
+    - field.field.node.wsdl_docs_operation.field_wsdl_docs_input
+    - field.field.node.wsdl_docs_operation.field_wsdl_docs_output
+    - field.field.node.wsdl_docs_operation.field_wsdl_docs_soap_ref
+    - field.field.node.wsdl_docs_operation.field_wsdl_docs_style
+    - node.type.wsdl_docs_operation
+  module:
+    - text
+    - user
+id: node.wsdl_docs_operation.teaser
+targetEntityType: node
+bundle: wsdl_docs_operation
+mode: teaser
+content:
+  body:
+    label: hidden
+    type: text_summary_or_trimmed
+    weight: 0
+    settings:
+      trim_length: 600
+    third_party_settings: {  }
+    region: content
+  links:
+    weight: 1
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  field_wsdl_docs_documentation: true
+  field_wsdl_docs_input: true
+  field_wsdl_docs_output: true
+  field_wsdl_docs_soap_ref: true
+  field_wsdl_docs_style: true

@@ -1,0 +1,23 @@
+uuid: e1cf1f96-8d89-412f-b94c-ba6bb599b9c8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_wsdl_docs_source
+    - node.type.soap_service
+  module:
+    - link
+id: node.soap_service.field_wsdl_docs_source
+field_name: field_wsdl_docs_source
+entity_type: node
+bundle: soap_service
+label: 'WSDL Source'
+description: 'The URL of the WSDL file defining this SOAP resource.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  link_type: 17
+  title: 0
+field_type: link

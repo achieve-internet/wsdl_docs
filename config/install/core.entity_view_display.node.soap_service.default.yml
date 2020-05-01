@@ -1,0 +1,47 @@
+uuid: e2988bc7-81c4-410b-a066-a31c59ae4138
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.soap_service.body
+    - field.field.node.soap_service.field_wsdl_docs_source
+    - node.type.soap_service
+  module:
+    - link
+    - text
+    - user
+id: node.soap_service.default
+targetEntityType: node
+bundle: soap_service
+mode: default
+content:
+  body:
+    weight: 0
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_wsdl_docs_source:
+    weight: 1
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    type: link
+    region: content
+  links:
+    weight: 3
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  operations_list:
+    weight: 2
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden: {  }

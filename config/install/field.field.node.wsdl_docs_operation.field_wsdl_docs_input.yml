@@ -1,0 +1,21 @@
+uuid: 2635622e-3e4e-4bf7-89fe-bbf63d36d9db
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_wsdl_docs_input
+    - node.type.wsdl_docs_operation
+  module:
+    - text
+id: node.wsdl_docs_operation.field_wsdl_docs_input
+field_name: field_wsdl_docs_input
+entity_type: node
+bundle: wsdl_docs_operation
+label: Input
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

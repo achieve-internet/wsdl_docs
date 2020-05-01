@@ -1,0 +1,21 @@
+uuid: 308811b9-d273-4c1c-8b00-6cd8ca626d5c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_wsdl_docs_documentation
+    - node.type.wsdl_docs_operation
+  module:
+    - text
+id: node.wsdl_docs_operation.field_wsdl_docs_documentation
+field_name: field_wsdl_docs_documentation
+entity_type: node
+bundle: wsdl_docs_operation
+label: Documentation
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

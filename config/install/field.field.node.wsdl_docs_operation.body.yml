@@ -1,0 +1,23 @@
+uuid: cbf9e783-6dad-46f6-8853-5c39b9f70741
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - node.type.wsdl_docs_operation
+  module:
+    - text
+id: node.wsdl_docs_operation.body
+field_name: body
+entity_type: node
+bundle: wsdl_docs_operation
+label: Body
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  display_summary: true
+  required_summary: false
+field_type: text_with_summary

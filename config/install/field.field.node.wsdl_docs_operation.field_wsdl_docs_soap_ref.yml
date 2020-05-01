@@ -1,0 +1,28 @@
+uuid: 42b62398-b54a-418a-8cf1-0c5828bcc1f0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_wsdl_docs_soap_ref
+    - node.type.soap_service
+    - node.type.wsdl_docs_operation
+id: node.wsdl_docs_operation.field_wsdl_docs_soap_ref
+field_name: field_wsdl_docs_soap_ref
+entity_type: node
+bundle: wsdl_docs_operation
+label: 'Soap Service'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      soap_service: soap_service
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

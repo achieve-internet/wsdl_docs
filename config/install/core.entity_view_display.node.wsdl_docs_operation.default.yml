@@ -1,0 +1,59 @@
+uuid: c806481a-0b85-409f-bef6-a936ed30233c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.wsdl_docs_operation.body
+    - field.field.node.wsdl_docs_operation.field_wsdl_docs_documentation
+    - field.field.node.wsdl_docs_operation.field_wsdl_docs_input
+    - field.field.node.wsdl_docs_operation.field_wsdl_docs_output
+    - field.field.node.wsdl_docs_operation.field_wsdl_docs_soap_ref
+    - field.field.node.wsdl_docs_operation.field_wsdl_docs_style
+    - node.type.wsdl_docs_operation
+  module:
+    - text
+    - user
+id: node.wsdl_docs_operation.default
+targetEntityType: node
+bundle: wsdl_docs_operation
+mode: default
+content:
+  body:
+    label: hidden
+    type: text_default
+    weight: 1
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  field_wsdl_docs_documentation:
+    weight: 2
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_wsdl_docs_input:
+    weight: 3
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_wsdl_docs_output:
+    weight: 4
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_wsdl_docs_soap_ref:
+    weight: 0
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+hidden:
+  field_wsdl_docs_style: true
+  links: true

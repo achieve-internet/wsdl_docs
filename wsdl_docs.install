@@ -1,0 +1,54 @@
+<?php
+
+/**
+ * @file
+ * WSDL Docs - installation file.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function wsdl_docs_schema() {
+  $schema['wsdl_docs_soap_services'] = [
+    'fields' => [
+      'nid' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Node id soap service node.',
+      ],
+      'label' => [
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => 'Soap service node label.',
+      ],
+      'url' => [
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => 'The url of the soap service.',
+      ],
+      'operations' => [
+        'type' => 'blob',
+        'not null' => FALSE,
+        'size' => 'big',
+        'description' => 'The operations this web service offers.',
+      ],
+      'datatypes' => [
+        'type' => 'blob',
+        'not null' => FALSE,
+        'size' => 'big',
+        'description' => 'The complex data types used in the operations.',
+      ],
+    ],
+    'primary key' => ['nid'],
+  ];
+  return $schema;
+}
+
+/**
+ * Initialize new custom table.
+ */
+function wsdl_docs_update_8001() {
+  drupal_install_schema('wsdl_docs');
+}

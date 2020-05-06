@@ -2,6 +2,7 @@
 
 namespace Drupal\wsdl_docs\Services;
 
+use Drupal\Core\Database\Connection;
 use DOMDocument;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
@@ -60,12 +61,15 @@ class SoapClientManager {
    *   File system service.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   The current user.
+   * @param Drupal\Core\Database\Connection $connection
+   *   Database connnection.
    */
-  public function __construct(LoggerChannelFactoryInterface $logger_factory, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, AccountInterface $current_user) {
+  public function __construct(LoggerChannelFactoryInterface $logger_factory, EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, AccountInterface $current_user, Connection $connection) {
     $this->loggerFactory = $logger_factory;
     $this->entityTypeManager = $entity_type_manager;
     $this->fileSystem = $file_system;
     $this->currentUser = $current_user;
+    $this->connection = $connection;
   }
 
   /**
@@ -180,7 +184,6 @@ class SoapClientManager {
     }
 
     $documentations = $styles = $outputs = $outputs_messages = $inputs = $inputs_messages = $messages_elements = $elements_types = [];
-
     $portTypes = $domDocument->getElementsByTagName('portType');
     foreach ($portTypes as $portType) {
       $operations = $portType->getElementsByTagName('operation');
@@ -284,13 +287,23 @@ class SoapClientManager {
           $styles[$name] = $operation2->getAttribute('style');
         }
         // Parse body element.
-        $outputs[$name] = $this->renderOperation($name, $_outputs_messages, $_messages_elements, $_elements_types, $_types_properties);
-        $inputs[$name] = $this->renderOperation($name, $_inputs_messages, $_messages_elements, $_elements_types, $_types_properties);
+        $outputs[$name] = $this->renderOperation($name, $_outputs_messages, $_messages_elements, $_elements_types, $_types_properties, $data_types);
+        $inputs[$name] = $this->renderOperation($name, $_inputs_messages, $_messages_elements, $_elements_types, $_types_properties, $data_types);
       }
     }
 
     // List of new operations.
     $operations = $this->parseSoapOperations($client->__getFunctions());
+    // Add operations and data types for later use.
+    $this->connection->merge('wsdl_docs_soap_services')
+      ->key('nid', $node->id())
+      ->fields([
+        'nid' => $node->id(),
+        'label' => $node->label(),
+        'url' => $node->field_wsdl_docs_source->uri,
+        'operations' => serialize($operations),
+        'datatypes' => serialize($data_types),
+      ])->execute();
     // Get old operations for this service.
     $current_operations = $this->entityTypeManager->getStorage('node')
       ->loadByProperties([
@@ -503,12 +516,24 @@ class SoapClientManager {
    *   List of types in element tags.
    * @param array $_types_properties
    *   List of element properties in data types tags.
+   * @param array $data_types
+   *   Available data types.
    *
    * @return string
    *   HTML output.
    */
-  public function renderOperation($operation_name, array &$_outputs_messages, array &$_messages_elements, array &$_elements_types, array &$_types_properties) {
+  public function renderOperation($operation_name, array &$_outputs_messages, array &$_messages_elements, array &$_elements_types, array &$_types_properties, array $data_types) {
     $messages = $_outputs_messages[$operation_name];
+    $base_field_types = [
+      'text',
+      'integer',
+      'boolean',
+      'dateTime',
+      'date',
+      'double',
+      'float',
+      'decimal',
+    ];
     // Parse port name.
     $message = $messages[0];
     $part_name = $_messages_elements[$message]['name'];
@@ -521,7 +546,8 @@ class SoapClientManager {
       $text .= $part_name . ' type ' . $element . '<br>';
       $text .= '<ul><li>' . $element_name . ' type ' . $element_type . '<ul>';
       foreach ($properties as $property_name => $property) {
-        $text .= '<li>' . $property_name . ' - type ' . $property['type'] . '</li>';
+        $property['name'] = $property_name;
+        $text .= $this->getRecursiveDataTypes($property, $data_types, $base_field_types);
       }
       $text .= '</ul></li></ul>';
     }
@@ -531,11 +557,54 @@ class SoapClientManager {
       $text .= $part_name . ' type ' . $type . '<br>';
       $text .= '<ul>';
       foreach ($properties as $property_name => $property) {
-        $text .= '<li>' . $property_name . ' - type ' . $property['type'] . '</li>';
+        $property['name'] = $property_name;
+        $text .= $this->getRecursiveDataTypes($property, $data_types, $base_field_types);
       }
       $text .= '</ul>';
     }
     return $text;
+  }
+
+  /**
+   * Get renderable input and output parameters.
+   *
+   * @param array $property
+   *   Property info.
+   * @param array $data_types
+   *   All available data types.
+   * @param array $base_field_types
+   *   Base field types.
+   *
+   * @return mixed|string
+   *   Return html string.
+   */
+  public function getRecursiveDataTypes(array $property, array $data_types, array $base_field_types) {
+    $text = '';
+    $data = &drupal_static(__METHOD__, []);
+    $type = $property['type'];
+    if (!in_array($property['type'], $base_field_types)) {
+      if (!isset($data[$type])) {
+        $child_property = $data_types[$property['type']]['property info'];
+        $text .= '<li>' . $property['name'] . ' - type ' . $property['type'] . '<ul>';
+        foreach ($child_property as $name => $item) {
+          $item['name'] = $name;
+          $new_text = $this->getRecursiveDataTypes($item, $data_types, $base_field_types);
+          if (!in_array($item['type'], $base_field_types)) {
+            $text .= $new_text;
+          }
+          else {
+            $text .= '<li>' . $item['name'] . ' - type ' . $item['type'] . '</li>';
+          }
+        }
+        $text .= '</ul></li>';
+        $data[$type] = $text;
+      }
+      return $data[$type];
+    }
+    else {
+      $text = '<li>' . $property['name'] . ' - type ' . $property['type'] . '</li>';
+      return $text;
+    }
   }
 
   /**

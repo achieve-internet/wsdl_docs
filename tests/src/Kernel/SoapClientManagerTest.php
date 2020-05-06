@@ -237,8 +237,8 @@ class SoapClientManagerTest extends EntityKernelTestBase {
           $styles[$name] = $operation2->getAttribute('style');
         }
         // Parse body element.
-        $outputs[$name] = $this->soapManagerService->renderOperation($name, $_outputs_messages, $_messages_elements, $_elements_types, $_types_properties);
-        $inputs[$name] = $this->soapManagerService->renderOperation($name, $_inputs_messages, $_messages_elements, $_elements_types, $_types_properties);
+        $outputs[$name] = $this->soapManagerService->renderOperation($name, $_outputs_messages, $_messages_elements, $_elements_types, $_types_properties, $data_types);
+        $inputs[$name] = $this->soapManagerService->renderOperation($name, $_inputs_messages, $_messages_elements, $_elements_types, $_types_properties, $data_types);
       }
     }
 

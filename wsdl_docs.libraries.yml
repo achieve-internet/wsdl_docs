@@ -1,0 +1,5 @@
+wsdl_docs:
+  version: 1.x
+  css:
+    theme:
+      css/wsdl_docs.css: {}

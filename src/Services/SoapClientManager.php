@@ -2,12 +2,13 @@
 
 namespace Drupal\wsdl_docs\Services;
 
-use Drupal\Core\Database\Connection;
 use DOMDocument;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use SoapClient;
@@ -21,6 +22,8 @@ use Throwable;
  * @package Drupal\wsdl_docs\Services
  */
 class SoapClientManager {
+
+  use StringTranslationTrait;
 
   /**
    * The logger factory service.
@@ -543,24 +546,30 @@ class SoapClientManager {
       $element_name = $_elements_types[$element]['name'];
       $element_type = $_elements_types[$element]['type'];
       $properties = $_types_properties[$element_type];
-      $text .= $part_name . ' type ' . $element . '<br>';
-      $text .= '<ul><li>' . $element_name . ' type ' . $element_type . '<ul>';
+      // $text .= $part_name . ' type ' . $element . '<br>';
+      $text .= '<table><thead><th>' . $this->t('Name') . '</th><th>' . $this->t('Type') . '</th></thead><tbody>';
+      $text .= '<tr><td> ' . $part_name . '</td><td>' . $element . '</td></tr><tr><td colspan="2"><table><tbody>';
+      $text .= '<tr><td>' . $element_name . '</td><td>' . $element_type . '</td></tr><tr><td colspan="2"><table><tbody>';
       foreach ($properties as $property_name => $property) {
         $property['name'] = $property_name;
         $text .= $this->getRecursiveDataTypes($property, $data_types, $base_field_types);
       }
-      $text .= '</ul></li></ul>';
+      $text .= '</tbody></table></td></tr>';
+      $text .= '</tbody></table></td></tr>';
+      $text .= '</tbody></table>';
     }
     elseif (isset($_messages_elements[$message]['type'])) {
       $type = $_messages_elements[$message]['type'];
       $properties = $_types_properties[$type];
-      $text .= $part_name . ' type ' . $type . '<br>';
-      $text .= '<ul>';
+      // $text .= $part_name . ' type ' . $type . '<br>';
+      $text .= '<table><thead><th>' . $this->t('Name') . '</th><th>' . $this->t('Type') . '</th></thead><tbody>';
+      $text .= '<tr><td> ' . $part_name . '</td><td>' . $type . '</td></tr><tr><tr><td colspan="2"><table><tbody>';
       foreach ($properties as $property_name => $property) {
         $property['name'] = $property_name;
         $text .= $this->getRecursiveDataTypes($property, $data_types, $base_field_types);
       }
-      $text .= '</ul>';
+      $text .= '</tbody></table></td></tr>';
+      $text .= '</tbody></table>';
     }
     return $text;
   }
@@ -585,7 +594,7 @@ class SoapClientManager {
     if (!in_array($property['type'], $base_field_types)) {
       if (!isset($data[$type])) {
         $child_property = $data_types[$property['type']]['property info'];
-        $text .= '<li>' . $property['name'] . ' - type ' . $property['type'] . '<ul>';
+        $text .= '<tr><td>' . $property['name'] . '</td><td>' . $property['type'] . '</td></tr><tr><td colspan="2"><table><tbody>';
         foreach ($child_property as $name => $item) {
           $item['name'] = $name;
           $new_text = $this->getRecursiveDataTypes($item, $data_types, $base_field_types);
@@ -593,16 +602,16 @@ class SoapClientManager {
             $text .= $new_text;
           }
           else {
-            $text .= '<li>' . $item['name'] . ' - type ' . $item['type'] . '</li>';
+            $text .= '<tr><td>' . $item['name'] . '</td><td>' . $item['type'] . '</td></tr>';
           }
         }
-        $text .= '</ul></li>';
+        $text .= '</td></tr></tbody></table>';
         $data[$type] = $text;
       }
       return $data[$type];
     }
     else {
-      $text = '<li>' . $property['name'] . ' - type ' . $property['type'] . '</li>';
+      $text = '<tr><td>' . $property['name'] . '</td><td>' . $property['type'] . '</td></tr>';
       return $text;
     }
   }

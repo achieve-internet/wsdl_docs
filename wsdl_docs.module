@@ -52,4 +52,7 @@ function wsdl_docs_node_view(array &$build, EntityInterface $entity, EntityViewD
       'content' => views_embed_view('wsdl_operations', 'soap_page'),
     ];
   }
+  if ($entity->getType() == 'wsdl_docs_operation') {
+    $build['#attached']['library'][] = 'wsdl_docs/wsdl_docs';
+  }
 }

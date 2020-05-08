@@ -52,3 +52,36 @@ function wsdl_docs_schema() {
 function wsdl_docs_update_8001() {
   drupal_install_schema('wsdl_docs');
 }
+
+/**
+ * Re-save all soap service nodes.
+ */
+function wsdl_docs_update_8002(&$sandbox) {
+  if (!isset($sandbox['total'])) {
+    $nids = \Drupal::entityQuery('node')
+      ->condition('type', 'soap_service')
+      ->execute();
+    $sandbox['total'] = count($nids);
+    $sandbox['current'] = 0;
+  }
+  $node_storage = \Drupal::entityTypeManager()->getStorage('node');
+  $nodes_per_batch = 2;
+
+  // Handle one pass through.
+  $nids = \Drupal::entityQuery('node')
+    ->condition('type', 'soap_service')
+    ->range($sandbox['current'], $sandbox['current'] + $nodes_per_batch)
+    ->execute();
+  $nodes = $node_storage->loadMultiple($nids);
+
+  foreach($nodes as $node) {
+    $node->save();
+    $sandbox['current']++;
+  }
+  \Drupal::logger('wsdl_docs')->debug('@count soap service nodes were updated', ['@count' => $sandbox['current']]);
+  if ($sandbox['total'] == 0) {
+    $sandbox['#finished'] = 1;
+  } else {
+    $sandbox['#finished'] = ($sandbox['current'] / $sandbox['total']);
+  }
+}

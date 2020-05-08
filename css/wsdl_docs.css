@@ -1,0 +1,12 @@
+/**
+Operation node Input/Output table styles.
+ */
+.field--name-field-wsdl-docs-input table,
+.field--name-field-wsdl-docs-output table {
+  table-layout: fixed;
+}
+
+.field--name-field-wsdl-docs-input table tr,
+.field--name-field-wsdl-docs-output table tr {
+  background: none;
+}

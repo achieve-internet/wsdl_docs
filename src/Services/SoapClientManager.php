@@ -242,28 +242,31 @@ class SoapClientManager {
     }
 
     // Parse input/output (step 3)
-    $schemas = $domDocument->getElementsByTagName('types')[0]->getElementsByTagName('schema');
-    foreach ($schemas as $schema) {
-      $elements = $schema->childNodes;
-      foreach ($elements as $element) {
-        if ($element->localName == 'element') {
-          $element_name = $element->getAttribute('name');
-          $element2_name = $element_name;
-          if (isset($messages_elements[$element_name])) {
-            // Parse complexType element.
-            if (!$element->hasAttribute('type')) {
-              $element = $element->getElementsByTagName('element')[0];
-              $element2_name = $element->getAttribute('name');
-            }
-            if ($element->hasAttribute('type')) {
-              $element_type = $element->getAttribute('type');
-              // Remove "tns:".
-              $element_type = $this->removeMethodNamespace($element_type);
-              $elements_types[$element_type][] = $element_name;
-              $_elements_types[$element_name] = [
-                'name' => $element2_name,
-                'type' => $element_type,
-              ];
+    $types = $domDocument->getElementsByTagName('types');
+    if ($types['length'] > 0) {
+      $schemas = $types[0]->getElementsByTagName('schema');
+      foreach ($schemas as $schema) {
+        $elements = $schema->childNodes;
+        foreach ($elements as $element) {
+          if ($element->localName == 'element') {
+            $element_name = $element->getAttribute('name');
+            $element2_name = $element_name;
+            if (isset($messages_elements[$element_name])) {
+              // Parse complexType element.
+              if (!$element->hasAttribute('type')) {
+                $element = $element->getElementsByTagName('element')[0];
+                $element2_name = $element->getAttribute('name');
+              }
+              if ($element->hasAttribute('type')) {
+                $element_type = $element->getAttribute('type');
+                // Remove "tns:".
+                $element_type = $this->removeMethodNamespace($element_type);
+                $elements_types[$element_type][] = $element_name;
+                $_elements_types[$element_name] = [
+                  'name' => $element2_name,
+                  'type' => $element_type,
+                ];
+              }
             }
           }
         }

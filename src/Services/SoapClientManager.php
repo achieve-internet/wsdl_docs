@@ -113,11 +113,11 @@ class SoapClientManager {
    */
   public function loadUrl($uri) {
     try {
-      $client = new SoapClient($uri, ["trace" => 1, "exception" => 0]);
+      $client = new SoapClient($uri, ['trace' => 1, 'exception' => 0]);
     }
     catch (Throwable $t) {
       $this->loggerFactory->get('wsdl_docs')
-        ->warning('Problem loading SoapClient with uri @uri, message: @message', [
+        ->warning('Problem loading SOAP Client with URI @uri, message: @message', [
           '@uri' => $uri,
           '@message' => $t->getMessage(),
         ]);
